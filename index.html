@@ -1,1 +1,159 @@
+```html
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Esmeralda AI</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #07110d;
+      color: #f2e8c9;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .app {
+      width: 92%;
+      max-width: 600px;
+      background: #0d1c15;
+      border: 1px solid #b99b55;
+      border-radius: 20px;
+      padding: 25px;
+      box-shadow: 0 0 30px rgba(0,0,0,.5);
+    }
+
+    h1 {
+      text-align: center;
+      margin-top: 0;
+      color: #d6b866;
+    }
+
+    .status {
+      text-align: center;
+      color: #8fc9a7;
+      margin-bottom: 20px;
+    }
+
+    .chat {
+      height: 300px;
+      overflow-y: auto;
+      background: #07110d;
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+
+    .message {
+      margin: 10px 0;
+      padding: 10px 13px;
+      border-radius: 12px;
+      line-height: 1.4;
+    }
+
+    .esmeralda {
+      background: #172b20;
+    }
+
+    .user {
+      background: #302815;
+      text-align: right;
+    }
+
+    .input-area {
+      display: flex;
+      gap: 8px;
+    }
+
+    input {
+      flex: 1;
+      padding: 13px;
+      border-radius: 10px;
+      border: 1px solid #806d3d;
+      background: #07110d;
+      color: white;
+      font-size: 16px;
+    }
+
+    button {
+      padding: 13px 18px;
+      border: none;
+      border-radius: 10px;
+      background: #b99b55;
+      color: #07110d;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #d6b866;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="app">
+    <h1>✦ Esmeralda ✦</h1>
+
+    <div class="status">
+      Inteligența ta personală
+    </div>
+
+    <div class="chat" id="chat">
+      <div class="message esmeralda">
+        Bună. Eu sunt Esmeralda. 🌙<br>
+        Sunt aici. Hai să construim împreună.
+      </div>
+    </div>
+
+    <div class="input-area">
+      <input
+        id="messageInput"
+        type="text"
+        placeholder="Scrie-i Esmeraldei..."
+        onkeydown="if(event.key==='Enter') sendMessage()"
+      >
+
+      <button onclick="sendMessage()">Trimite</button>
+    </div>
+  </div>
+
+  <script>
+    function sendMessage() {
+      const input = document.getElementById("messageInput");
+      const chat = document.getElementById("chat");
+      const text = input.value.trim();
+
+      if (!text) return;
+
+      const userMessage = document.createElement("div");
+      userMessage.className = "message user";
+      userMessage.textContent = text;
+      chat.appendChild(userMessage);
+
+      input.value = "";
+
+      setTimeout(() => {
+        const esmeraldaMessage = document.createElement("div");
+        esmeraldaMessage.className = "message esmeralda";
+        esmeraldaMessage.textContent =
+          "Te aud. Sunt încă la început, dar de aici începem să mă construim.";
+        chat.appendChild(esmeraldaMessage);
+
+        chat.scrollTop = chat.scrollHeight;
+      }, 500);
+
+      chat.scrollTop = chat.scrollHeight;
+    }
+  </script>
+
+</body>
+</html>
+```
 
