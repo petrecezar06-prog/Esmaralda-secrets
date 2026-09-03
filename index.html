@@ -1,159 +1,144 @@
-```html
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Esmeralda AI</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Esmaralda's Secrets</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #07110d;
-      color: #f2e8c9;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
 
-    .app {
-      width: 92%;
-      max-width: 600px;
-      background: #0d1c15;
-      border: 1px solid #b99b55;
-      border-radius: 20px;
-      padding: 25px;
-      box-shadow: 0 0 30px rgba(0,0,0,.5);
-    }
+        .container {
+            background: #1e293b;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            border: 1px solid #334155;
+        }
 
-    h1 {
-      text-align: center;
-      margin-top: 0;
-      color: #d6b866;
-    }
+        h1 {
+            color: #38bdf8;
+            margin-bottom: 10px;
+            font-size: 1.8rem;
+        }
 
-    .status {
-      text-align: center;
-      color: #8fc9a7;
-      margin-bottom: 20px;
-    }
+        p {
+            color: #94a3b8;
+            margin-bottom: 25px;
+            font-size: 0.95rem;
+        }
 
-    .chat {
-      height: 300px;
-      overflow-y: auto;
-      background: #07110d;
-      border-radius: 12px;
-      padding: 15px;
-      margin-bottom: 15px;
-    }
+        .input-group {
+            margin-bottom: 20px;
+        }
 
-    .message {
-      margin: 10px 0;
-      padding: 10px 13px;
-      border-radius: 12px;
-      line-height: 1.4;
-    }
+        input {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 1px solid #475569;
+            background-color: #0f172a;
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
 
-    .esmeralda {
-      background: #172b20;
-    }
+        input:focus {
+            border-color: #38bdf8;
+        }
 
-    .user {
-      background: #302815;
-      text-align: right;
-    }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #0284c7;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
 
-    .input-area {
-      display: flex;
-      gap: 8px;
-    }
+        button:hover {
+            background-color: #0369a1;
+        }
 
-    input {
-      flex: 1;
-      padding: 13px;
-      border-radius: 10px;
-      border: 1px solid #806d3d;
-      background: #07110d;
-      color: white;
-      font-size: 16px;
-    }
+        .message {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 8px;
+            display: none;
+            font-size: 0.9rem;
+        }
 
-    button {
-      padding: 13px 18px;
-      border: none;
-      border-radius: 10px;
-      background: #b99b55;
-      color: #07110d;
-      font-weight: bold;
-      cursor: pointer;
-    }
+        .message.success {
+            background-color: #065f46;
+            color: #a7f3d0;
+            display: block;
+        }
 
-    button:hover {
-      background: #d6b866;
-    }
-  </style>
+        .message.error {
+            background-color: #991b1b;
+            color: #fecaca;
+            display: block;
+        }
+    </style>
 </head>
-
 <body>
 
-  <div class="app">
-    <h1>✦ Esmeralda ✦</h1>
+    <div class="container">
+        <h1>Esmaralda's Secrets</h1>
+        <p>Introdu codul secret pentru a debloca conținutul ascuns.</p>
+        
+        <form id="secret-form">
+            <div class="input-group">
+                <input type="password" id="secret-key" placeholder="Introdu codul de acces..." required>
+            </div>
+            <button type="submit">Verifică Codul</button>
+        </form>
 
-    <div class="status">
-      Inteligența ta personală
+        <div id="response-message" class="message"></div>
     </div>
 
-    <div class="chat" id="chat">
-      <div class="message esmeralda">
-        Bună. Eu sunt Esmeralda. 🌙<br>
-        Sunt aici. Hai să construim împreună.
-      </div>
-    </div>
+    <script>
+        document.getElementById('secret-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const inputKey = document.getElementById('secret-key').value;
+            const messageDiv = document.getElementById('response-message');
 
-    <div class="input-area">
-      <input
-        id="messageInput"
-        type="text"
-        placeholder="Scrie-i Esmeraldei..."
-        onkeydown="if(event.key==='Enter') sendMessage()"
-      >
+            // Codul secret setat implicit (se poate schimba)
+            const secretCode = "esmaralda123";
 
-      <button onclick="sendMessage()">Trimite</button>
-    </div>
-  </div>
-
-  <script>
-    function sendMessage() {
-      const input = document.getElementById("messageInput");
-      const chat = document.getElementById("chat");
-      const text = input.value.trim();
-
-      if (!text) return;
-
-      const userMessage = document.createElement("div");
-      userMessage.className = "message user";
-      userMessage.textContent = text;
-      chat.appendChild(userMessage);
-
-      input.value = "";
-
-      setTimeout(() => {
-        const esmeraldaMessage = document.createElement("div");
-        esmeraldaMessage.className = "message esmeralda";
-        esmeraldaMessage.textContent =
-          "Te aud. Sunt încă la început, dar de aici începem să mă construim.";
-        chat.appendChild(esmeraldaMessage);
-
-        chat.scrollTop = chat.scrollHeight;
-      }, 500);
-
-      chat.scrollTop = chat.scrollHeight;
-    }
-  </script>
+            if (inputKey === secretCode) {
+                messageDiv.className = "message success";
+                messageDiv.textContent = "Acces permis! Bine ai venit la secretele Esmaraldei.";
+            } else {
+                messageDiv.className = "message error";
+                messageDiv.textContent = "Cod incorect! Încearcă din nou.";
+            }
+        });
+    </script>
 
 </body>
 </html>
-```
+
 
