@@ -1,69 +1,169 @@
-<script>
-const WORKER_URL = 'https://nameless-block-036e.ar06.workers.dev';
-
-async function sendMessage() {
-  const inputElement = document.querySelector('.chat-input input') || document.getElementById('user-input');
-  const userMessage = inputElement.value.trim();
-  if (!userMessage) return;
-
-  // Afișează mesajul utilizatorului
-  appendMessage('user', userMessage);
-  inputElement.value = '';
-
-  // Indicator de încărcare
-  const loadingId = appendMessage('assistant', 'Esmeralda consultă sferele...');
-
-  try {
-    const response = await fetch(WORKER_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: userMessage }),
-    });
-
-    const data = await response.json();
-
-    if (response.ok && data.reply) {
-      updateMessage(loadingId, data.reply);
-    } else {
-      updateMessage(loadingId, 'A apărut o eroare în conexiunea mistică.');
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Esmeralda Secrets</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #1a0933;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 10px;
     }
-  } catch (error) {
-    console.error('Eroare:', error);
-    updateMessage(loadingId, 'Nu am putut conecta cererea la Esmeralda.');
-  }
-}
+    .chat-container {
+      width: 100%;
+      max-width: 500px;
+      background: #2a124d;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+      display: flex;
+      flex-direction: column;
+      height: 80vh;
+    }
+    h1 {
+      text-align: center;
+      color: #d4af37;
+      margin-top: 0;
+    }
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+      border: 1px solid #4a237a;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      background: #150628;
+    }
+    .message {
+      margin-bottom: 10px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      max-width: 80%;
+      word-wrap: break-word;
+    }
+    .user-message {
+      background: #622a9a;
+      margin-left: auto;
+      text-align: right;
+    }
+    .assistant-message {
+      background: #3b1768;
+      color: #d4af37;
+      margin-right: auto;
+    }
+    .chat-input {
+      display: flex;
+      gap: 10px;
+    }
+    input {
+      flex: 1;
+      padding: 12px;
+      border: 1px solid #4a237a;
+      border-radius: 6px;
+      background: #150628;
+      color: #fff;
+      outline: none;
+    }
+    button {
+      padding: 12px 20px;
+      background: #d4af37;
+      color: #1a0933;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #f1c40f;
+    }
+  </style>
+</head>
+<body>
 
-function appendMessage(role, text) {
-  const chatBox = document.querySelector('.chat-messages') || document.getElementById('chat-box');
-  const msgElement = document.createElement('div');
-  const msgId = 'msg-' + Date.now();
-  
-  msgElement.id = msgId;
-  msgElement.className = `message ${role}-message`;
-  msgElement.textContent = text;
-  
-  chatBox.appendChild(msgElement);
-  chatBox.scrollTop = chatBox.scrollHeight;
-  
-  return msgId;
-}
+  <div class="chat-container">
+    <h1>🔮 Esmeralda Secrets</h1>
+    <div class="chat-messages" id="chat-box"></div>
+    <div class="chat-input">
+      <input type="text" id="user-input" placeholder="Întreabă-o pe Esmeralda...">
+      <button id="send-btn">Trimite</button>
+    </div>
+  </div>
 
-function updateMessage(id, text) {
-  const msgElement = document.getElementById(id);
-  if (msgElement) {
-    msgElement.textContent = text;
-  }
-}
+  <script>
+    const WORKER_URL = 'https://nameless-block-036e.ar06.workers.dev';
 
-document.addEventListener('DOMContentLoaded', () => {
-  const sendBtn = document.querySelector('.send-btn') || document.getElementById('send-btn');
-  const inputElement = document.querySelector('.chat-input input') || document.getElementById('user-input');
+    async function sendMessage() {
+      const inputElement = document.getElementById('user-input');
+      const userMessage = inputElement.value.trim();
+      if (!userMessage) return;
 
-  if (sendBtn) sendBtn.addEventListener('click', sendMessage);
-  if (inputElement) {
-    inputElement.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') sendMessage();
+      appendMessage('user', userMessage);
+      inputElement.value = '';
+
+      const loadingId = appendMessage('assistant', 'Esmeralda consultă sferele...');
+
+      try {
+        const response = await fetch(WORKER_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: userMessage }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.reply) {
+          updateMessage(loadingId, data.reply);
+        } else {
+          updateMessage(loadingId, 'A apărut o eroare în conexiunea mistică.');
+        }
+      } catch (error) {
+        console.error('Eroare:', error);
+        updateMessage(loadingId, 'Nu am putut conecta cererea la Esmeralda.');
+      }
+    }
+
+    function appendMessage(role, text) {
+      const chatBox = document.getElementById('chat-box');
+      const msgElement = document.createElement('div');
+      const msgId = 'msg-' + Date.now();
+      
+      msgElement.id = msgId;
+      msgElement.className = `message ${role}-message`;
+      msgElement.textContent = text;
+      
+      chatBox.appendChild(msgElement);
+      chatBox.scrollTop = chatBox.scrollHeight;
+      
+      return msgId;
+    }
+
+    function updateMessage(id, text) {
+      const msgElement = document.getElementById(id);
+      if (msgElement) {
+        msgElement.textContent = text;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const sendBtn = document.getElementById('send-btn');
+      const inputElement = document.getElementById('user-input');
+
+      if (sendBtn) sendBtn.addEventListener('click', sendMessage);
+      if (inputElement) {
+        inputElement.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') sendMessage();
+        });
+      }
     });
-  }
-});
-</script>
+  </script>
+
+</body>
+</html>
