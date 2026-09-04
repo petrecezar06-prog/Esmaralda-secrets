@@ -117,8 +117,8 @@
         });
 
         const data = await response.json();
-        if (data.reply) {
-          botDiv.textContent = data.reply;
+        if (data.response) {
+          botDiv.textContent = data.response;
         } else {
           botDiv.textContent = 'Nu am putut conecta cererea la Esmeralda.';
         }
