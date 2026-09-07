@@ -1,4 +1,3 @@
-  <script>
     const WORKER_URL = 'https://nameless-block-036e.petre-cezar06.workers.dev/';
 
     async function sendMessage() {
@@ -8,7 +7,10 @@
       
       if (!text) return;
 
-      // Afișează mesajul utilizatorului
+      // Disable input while processing
+      input.disabled = true;
+
+      // Display user message securely
       const userDiv = document.createElement('div');
       userDiv.className = 'message user-message';
       userDiv.textContent = text;
@@ -16,7 +18,7 @@
       input.value = '';
       chatBox.scrollTop = chatBox.scrollHeight;
 
-      // Mesaj de încărcare
+      // Loading indicator message
       const botDiv = document.createElement('div');
       botDiv.className = 'message bot-message';
       botDiv.textContent = 'Esmeralda gândește...';
@@ -30,9 +32,14 @@
           body: JSON.stringify({ message: text })
         });
 
+        // Handle non-JSON responses gracefully
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          throw new Error('Răspuns invalid de la server.');
+        }
+
         const data = await response.json();
         
-        // Extrage corect textul din structura venită de la OpenRouter
         if (data.choices && data.choices.length > 0 && data.choices[0].message) {
           botDiv.textContent = data.choices[0].message.content;
         } else if (data.error) {
@@ -41,12 +48,18 @@
           botDiv.textContent = 'Nu am putut citi răspunsul de la Esmeralda.';
         }
       } catch (error) {
-        botDiv.textContent = 'Eroare de conexiune cu serverul.';
+        botDiv.textContent = 'Eroare de conexiune sau server indisponibil.';
+      } finally {
+        // Re-enable input and refocus
+        input.disabled = false;
+        input.focus();
+        chatBox.scrollTop = chatBox.scrollHeight;
       }
-      chatBox.scrollTop = chatBox.scrollHeight;
     }
 
     document.getElementById('userInput').addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') sendMessage();
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        sendMessage();
+      }
     });
-  </script>
