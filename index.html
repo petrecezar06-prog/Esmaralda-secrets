@@ -232,7 +232,10 @@
       container.scrollTop = container.scrollHeight;
 
       try {
-        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        // Folosim un serviciu de bypass CORS stabil pentru a trimite cererea sigură către Groq
+        const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent('https://api.groq.com/openai/v1/chat/completions');
+
+        const response = await fetch(proxyUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
