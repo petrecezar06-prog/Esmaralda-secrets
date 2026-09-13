@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Esmeralda Secrets</title>
+  <title>Esmeralda Secrets - Local Neural AI</title>
   
   <link rel="icon" type="image/png" href="1789292830725.png">
   <link rel="apple-touch-icon" href="1789292830725.png">
@@ -72,6 +72,12 @@
     .header-info p {
       font-size: 12px;
       color: #94a3b8;
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
     }
 
     .voice-toggle {
@@ -157,6 +163,11 @@
     button.send-btn:hover {
       opacity: 0.9;
     }
+
+    button.send-btn:disabled {
+      background-color: #475569;
+      cursor: not-allowed;
+    }
   </style>
 </head>
 <body>
@@ -166,27 +177,36 @@
       <div class="avatar">E</div>
       <div class="header-info">
         <h1>Esmeralda Secrets</h1>
-        <p>Inteligență Universală • Online</p>
+        <p id="statusText">Se inițializează motorul neuronal...</p>
       </div>
     </div>
-    <button class="voice-toggle" id="voiceToggle" onclick="toggleVoice()">🔊 Sunet: Oprit</button>
+    <div class="controls">
+      <button class="voice-toggle" id="voiceToggle" onclick="toggleVoice()">🔊 Sunet: Oprit</button>
+    </div>
   </header>
 
   <div class="chat-container" id="chatContainer">
-    <div class="message bot">
-      Salut! Sunt Esmeralda. Sistemul a fost optimizat pe secțiuni individuale. Cu ce continuăm?
+    <div class="message bot" id="welcomeMsg">
+      Salut! Sunt Esmeralda. Încarc rețeaua neuronală locală în browser (te rog așteaptă câteva secunde la prima pornire)...
     </div>
   </div>
 
   <div class="input-container">
-    <input type="text" id="userInput" placeholder="Scrie orice întrebare..." autocomplete="off">
-    <button class="send-btn" onclick="sendMessage()">Trimite</button>
+    <input type="text" id="userInput" placeholder="Așteaptă încărcarea modelului..." disabled autocomplete="off">
+    <button class="send-btn" id="sendBtn" onclick="sendMessage()" disabled>Trimite</button>
   </div>
 
-  <script>
-    let voiceEnabled = false;
+  <!-- Import WebLLM din CDN oficial -->
+  <script type="module">
+    import * as webllm from "https://esm.run/@mlc-ai/web-llm";
 
-    function toggleVoice() {
+    let engine = null;
+    let voiceEnabled = false;
+    const messagesHistory = [
+      { role: "system", content: "Ești Esmeralda, o inteligență artificială universală avansată, prietenoasă, inteligentă și creativă. Rspunzi mereu în limba română." }
+    ];
+
+    window.toggleVoice = function() {
       voiceEnabled = !voiceEnabled;
       const btn = document.getElementById('voiceToggle');
       if (voiceEnabled) {
@@ -197,7 +217,7 @@
         btn.classList.remove('active');
         window.speechSynthesis.cancel();
       }
-    }
+    };
 
     function speakText(text) {
       if (!voiceEnabled || !('speechSynthesis' in window)) return;
@@ -210,13 +230,43 @@
       window.speechSynthesis.speak(utterance);
     }
 
-    function sendMessage() {
+    async function initAI() {
+      const statusText = document.getElementById('statusText');
+      const welcomeMsg = document.getElementById('welcomeMsg');
+      const inputField = document.getElementById('userInput');
+      const sendBtn = document.getElementById('sendBtn');
+
+      try {
+        // Folosim un model compact, ideal pentru rulare locală rapidă în browser
+        const selectedModel = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
+
+        engine = await webllm.CreateMLCEngine(selectedModel, {
+          initProgressCallback: (progress) => {
+            statusText.textContent = progress.text;
+            welcomeMsg.textContent = `Se descarcă rețeaua neuronală: ${Math.round(progress.progress * 100)}%`;
+          }
+        });
+
+        statusText.textContent = "Inteligență Universală • Online (Local AI)";
+        welcomeMsg.textContent = "Rețeaua neuronală este activă! Cu ce începem discuția?";
+        inputField.disabled = false;
+        inputField.placeholder = "Scrie orice întrebare...";
+        sendBtn.disabled = false;
+
+      } catch (err) {
+        console.error(err);
+        statusText.textContent = "Eroare WebGPU / Incompatibilitate";
+        welcomeMsg.textContent = "Dispozitivul tău nu suportă WebGPU sau a apărut o eroare la descărcarea modelului neuronal.";
+      }
+    }
+
+    window.sendMessage = async function() {
       const input = document.getElementById('userInput');
       const container = document.getElementById('chatContainer');
       const text = input.value.trim();
+      if (!text || !engine) return;
 
-      if (!text) return;
-
+      // Afișează mesajul utilizatorului
       const userMsg = document.createElement('div');
       userMsg.className = 'message user';
       userMsg.textContent = text;
@@ -225,64 +275,47 @@
       input.value = '';
       container.scrollTop = container.scrollHeight;
 
+      // Adaugă în istoric
+      messagesHistory.push({ role: "user", content: text });
+
+      // Bulă de încărcare pentru răspunsul modelului
       const botMsg = document.createElement('div');
       botMsg.className = 'message bot';
-      botMsg.textContent = "Esmeralda analizează...";
+      botMsg.textContent = "Esmeralda gândește...";
       container.appendChild(botMsg);
       container.scrollTop = container.scrollHeight;
 
-      setTimeout(() => {
-        let reply = "";
-        const clean = text.toLowerCase();
+      try {
+        const replyStream = await engine.chat.completions.create({
+          messages: messagesHistory,
+          stream: true,
+        });
 
-        // 1. Calcul matematic
-        let mathExp = text.replace(/×/g, '*').replace(/x/g, '*').replace(/X/g, '*');
-        const hasMath = /\d/.test(text) && /[\+\-\*\/]/.test(mathExp);
-
-        if (hasMath) {
-          try {
-            let res = Function('"use strict";return (' + mathExp + ')')();
-            reply = `Rezultatul calculului ${text} este: ${res}`;
-          } catch(e) {
-            reply = `Expresia "${text}" conține erori de sintaxă matematică.`;
-          }
-        } 
-        // 2. Complexul Oedip (separat)
-        else if (clean.includes('oedip') && !clean.includes('electra')) {
-          reply = "În psihanaliză (teoria lui Sigmund Freud), Complexul lui Oedip descrie atracția inconștientă a băiatului față de mamă și rivalitatea cu tatăl în timpul copilăriei.";
-        }
-        // 3. Complexul Electra (separat)
-        else if (clean.includes('electra') && !clean.includes('oedip')) {
-          reply = "Complexul Electra, termen introdus în psihanaliză (inspirat de teoria lui Carl Jung), descrie atașamentul emoțional al fetei față de tată și competiția sau tensiunea inconștientă resimțită față de mamă.";
-        }
-        // 4. Utilizator / Creator
-        else if (clean.includes('cum ma numesc') || clean.includes('cum mă numesc') || clean.includes('cine sunt')) {
-          reply = "Tu ești creatorul meu, cel care m-a programat și m-a configurat pe GitHub Pages!";
-        }
-        // 5. Identitate bot
-        else if (clean.includes('cine ești') || clean.includes('cum te numesti') || clean.includes('cum te cheamă')) {
-          reply = "Sunt Esmeralda, inteligența ta universală locală, creată să-ți ofere răspunsuri rapide și exacte.";
-        }
-        // 6. Ce faci
-        else if (clean.includes('ce faci')) {
-          reply = "Sunt aici online, gata să te ajut cu calcule, concepte psihologice, știință sau discuții interesante!";
-        }
-        // 7. Răspuns general de rezervă
-        else {
-          reply = `Subiectul "${text}" este foarte interesant. Ca inteligență universală, pot să te ajut să îl analizăm în detaliu sau să explorăm diverse perspective. Ce anume te interesează cel mai mult legat de acest aspect?`;
+        let fullReply = "";
+        for await (const chunk of replyStream) {
+          const delta = chunk.choices[0]?.delta?.content || "";
+          fullReply += delta;
+          botMsg.textContent = fullReply;
+          container.scrollTop = container.scrollHeight;
         }
 
-        botMsg.textContent = reply;
-        speakText(reply);
-        container.scrollTop = container.scrollHeight;
-      }, 350);
-    }
+        messagesHistory.push({ role: "assistant", content: fullReply });
+        speakText(fullReply);
+
+      } catch (err) {
+        botMsg.textContent = "A apărut o eroare în timpul generării răspunsului neuronal.";
+        console.error(err);
+      }
+    };
 
     document.getElementById('userInput').addEventListener('keypress', function(e) {
       if (e.key === 'Enter') {
-        sendMessage();
+        window.sendMessage();
       }
     });
+
+    // Pornirea automată a inițializării la încărcarea paginii
+    initAI();
   </script>
 
 </body>
