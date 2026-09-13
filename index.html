@@ -40,8 +40,14 @@
       padding: 15px 20px;
       display: flex;
       align-items: center;
+      justify-content: space-between;
       border-bottom: 1px solid #334155;
       box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
     }
 
     .avatar {
@@ -66,6 +72,21 @@
     .header-info p {
       font-size: 12px;
       color: #94a3b8;
+    }
+
+    .voice-toggle {
+      background: none;
+      border: 1px solid #475569;
+      color: var(--text-color);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .voice-toggle.active {
+      background-color: var(--accent-color);
+      border-color: var(--accent-color);
     }
 
     .chat-container {
@@ -121,7 +142,7 @@
       border-color: var(--accent-color);
     }
 
-    button {
+    button.send-btn {
       background-color: var(--accent-color);
       color: white;
       border: none;
@@ -132,7 +153,7 @@
       transition: opacity 0.2s;
     }
 
-    button:hover {
+    button.send-btn:hover {
       opacity: 0.9;
     }
   </style>
@@ -140,25 +161,56 @@
 <body>
 
   <header>
-    <div class="avatar">E</div>
-    <div class="header-info">
-      <h1>Esmeralda Secrets</h1>
-      <p>Online • Virtual Club</p>
+    <div class="header-left">
+      <div class="avatar">E</div>
+      <div class="header-info">
+        <h1>Esmeralda Secrets</h1>
+        <p>Inteligență Universală • Online</p>
+      </div>
     </div>
+    <button class="voice-toggle" id="voiceToggle" onclick="toggleVoice()">🔊 Sunet: Oprit</button>
   </header>
 
   <div class="chat-container" id="chatContainer">
     <div class="message bot">
-      Salut! Eu sunt Esmeralda. Cu ce te pot ajuta în clubul nostru în această zi?
+      Salut! Sunt Esmeralda, o inteligență universală avansată. Sunt pregătită să deslușesc orice enigmă, calcul sau idee complexă împreună cu tine. Cu ce începem?
     </div>
   </div>
 
   <div class="input-container">
-    <input type="text" id="userInput" placeholder="Scrie un mesaj..." autocomplete="off">
-    <button onclick="sendMessage()">Trimite</button>
+    <input type="text" id="userInput" placeholder="Scrie orice întrebare sau sarcină..." autocomplete="off">
+    <button class="send-btn" onclick="sendMessage()">Trimite</button>
   </div>
 
   <script>
+    let voiceEnabled = false;
+
+    function toggleVoice() {
+      voiceEnabled = !voiceEnabled;
+      const btn = document.getElementById('voiceToggle');
+      if (voiceEnabled) {
+        btn.textContent = "🔊 Sunet: Pornit";
+        btn.classList.add('active');
+      } else {
+        btn.textContent = "🔊 Sunet: Oprit";
+        btn.classList.remove('active');
+        window.speechSynthesis.cancel();
+      }
+    }
+
+    function speakText(text) {
+      if (!voiceEnabled || !('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      
+      // Curățăm textul de emoji-uri sau markdown pentru o intonație naturală
+      const cleanText = text.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '');
+      const utterance = new SpeechSynthesisUtterance(cleanText);
+      utterance.lang = 'ro-RO';
+      utterance.rate = 1.0;
+      utterance.pitch = 1.1; // Ușor mai fin pentru Esmeralda
+      window.speechSynthesis.speak(utterance);
+    }
+
     async function sendMessage() {
       const input = document.getElementById('userInput');
       const container = document.getElementById('chatContainer');
@@ -176,7 +228,7 @@
 
       const botMsg = document.createElement('div');
       botMsg.className = 'message bot';
-      botMsg.textContent = "Esmeralda gândește...";
+      botMsg.textContent = "Esmeralda analizează...";
       container.appendChild(botMsg);
       container.scrollTop = container.scrollHeight;
 
@@ -192,7 +244,10 @@
           body: JSON.stringify({
             model: "openai/gpt-4o-mini",
             messages: [
-              { role: "system", content: "Ești Esmeralda, o prezență misterioasă și fermecătoare dintr-un club virtual exclusiv numit Esmeralda Secrets. Răspunzi în limba română." },
+              { 
+                role: "system", 
+                content: "Ești Esmeralda, o inteligență artificială universală de nivel superior, extrem de avansată, precisă și capabilă de performanțe de vârf în orice domeniu: matematică, știință, programare avansată, strategie, logică și creativitate. Răspunzi în limba română cu claritate absolută, oferind soluții directe și corecte matematic/tehnic când ți se cere, dar păstrând o eleganță și o profunzime unică în exprimare." 
+              },
               { role: "user", content: text }
             ]
           })
@@ -200,7 +255,9 @@
 
         const data = await response.json();
         if (data.choices && data.choices.length > 0) {
-          botMsg.textContent = data.choices[0].message.content;
+          const reply = data.choices[0].message.content;
+          botMsg.textContent = reply;
+          speakText(reply);
         } else if (data.error) {
           botMsg.textContent = "Eroare OpenRouter: " + (data.error.message || JSON.stringify(data.error));
         } else {
