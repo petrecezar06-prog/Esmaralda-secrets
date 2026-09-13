@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Esmeralda Secrets - Local Neural AI</title>
+  <title>Esmeralda Secrets - Cloud AI</title>
   
   <link rel="icon" type="image/png" href="1789292830725.png">
   <link rel="apple-touch-icon" href="1789292830725.png">
@@ -163,11 +163,6 @@
     button.send-btn:hover {
       opacity: 0.9;
     }
-
-    button.send-btn:disabled {
-      background-color: #475569;
-      cursor: not-allowed;
-    }
   </style>
 </head>
 <body>
@@ -177,7 +172,7 @@
       <div class="avatar">E</div>
       <div class="header-info">
         <h1>Esmeralda Secrets</h1>
-        <p id="statusText">Se inițializează motorul neuronal...</p>
+        <p>Inteligență Universală • Online</p>
       </div>
     </div>
     <div class="controls">
@@ -186,27 +181,23 @@
   </header>
 
   <div class="chat-container" id="chatContainer">
-    <div class="message bot" id="welcomeMsg">
-      Salut! Sunt Esmeralda. Încarc rețeaua neuronală locală în browser (te rog așteaptă câteva secunde la prima pornire)...
+    <div class="message bot">
+      Salut! Sunt Esmeralda. Conexiunea cloud este activă. Cu ce subiect începem?
     </div>
   </div>
 
   <div class="input-container">
-    <input type="text" id="userInput" placeholder="Așteaptă încărcarea modelului..." disabled autocomplete="off">
-    <button class="send-btn" id="sendBtn" onclick="sendMessage()" disabled>Trimite</button>
+    <input type="text" id="userInput" placeholder="Scrie orice întrebare..." autocomplete="off">
+    <button class="send-btn" onclick="sendMessage()">Trimite</button>
   </div>
 
-  <!-- Import WebLLM din CDN oficial -->
-  <script type="module">
-    import * as webllm from "https://esm.run/@mlc-ai/web-llm";
-
-    let engine = null;
+  <script>
     let voiceEnabled = false;
-    const messagesHistory = [
-      { role: "system", content: "Ești Esmeralda, o inteligență artificială universală avansată, prietenoasă, inteligentă și creativă. Rspunzi mereu în limba română." }
+    const conversationHistory = [
+      { role: "system", content: "Ești Esmeralda, o inteligență artificială universală avansată, prietenoasă, inteligentă și creativă. Rspunzi mereu în limba română într-un mod natural și inteligent." }
     ];
 
-    window.toggleVoice = function() {
+    function toggleVoice() {
       voiceEnabled = !voiceEnabled;
       const btn = document.getElementById('voiceToggle');
       if (voiceEnabled) {
@@ -217,7 +208,7 @@
         btn.classList.remove('active');
         window.speechSynthesis.cancel();
       }
-    };
+    }
 
     function speakText(text) {
       if (!voiceEnabled || !('speechSynthesis' in window)) return;
@@ -230,41 +221,12 @@
       window.speechSynthesis.speak(utterance);
     }
 
-    async function initAI() {
-      const statusText = document.getElementById('statusText');
-      const welcomeMsg = document.getElementById('welcomeMsg');
-      const inputField = document.getElementById('userInput');
-      const sendBtn = document.getElementById('sendBtn');
-
-      try {
-        // Folosim un model compact, ideal pentru rulare locală rapidă în browser
-        const selectedModel = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
-
-        engine = await webllm.CreateMLCEngine(selectedModel, {
-          initProgressCallback: (progress) => {
-            statusText.textContent = progress.text;
-            welcomeMsg.textContent = `Se descarcă rețeaua neuronală: ${Math.round(progress.progress * 100)}%`;
-          }
-        });
-
-        statusText.textContent = "Inteligență Universală • Online (Local AI)";
-        welcomeMsg.textContent = "Rețeaua neuronală este activă! Cu ce începem discuția?";
-        inputField.disabled = false;
-        inputField.placeholder = "Scrie orice întrebare...";
-        sendBtn.disabled = false;
-
-      } catch (err) {
-        console.error(err);
-        statusText.textContent = "Eroare WebGPU / Incompatibilitate";
-        welcomeMsg.textContent = "Dispozitivul tău nu suportă WebGPU sau a apărut o eroare la descărcarea modelului neuronal.";
-      }
-    }
-
-    window.sendMessage = async function() {
+    async function sendMessage() {
       const input = document.getElementById('userInput');
       const container = document.getElementById('chatContainer');
       const text = input.value.trim();
-      if (!text || !engine) return;
+
+      if (!text) return;
 
       // Afișează mesajul utilizatorului
       const userMsg = document.createElement('div');
@@ -275,10 +237,10 @@
       input.value = '';
       container.scrollTop = container.scrollHeight;
 
-      // Adaugă în istoric
-      messagesHistory.push({ role: "user", content: text });
+      // Adaugă mesajul în istoric
+      conversationHistory.push({ role: "user", content: text });
 
-      // Bulă de încărcare pentru răspunsul modelului
+      // Bulă de încărcare
       const botMsg = document.createElement('div');
       botMsg.className = 'message bot';
       botMsg.textContent = "Esmeralda gândește...";
@@ -286,36 +248,40 @@
       container.scrollTop = container.scrollHeight;
 
       try {
-        const replyStream = await engine.chat.completions.create({
-          messages: messagesHistory,
-          stream: true,
+        // Folosim un API public gratuit pentru chat completions
+        const response = await fetch("https://text.pollinations.ai/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            messages: conversationHistory,
+            model: "openai",
+            jsonMode: false
+          })
         });
 
-        let fullReply = "";
-        for await (const chunk of replyStream) {
-          const delta = chunk.choices[0]?.delta?.content || "";
-          fullReply += delta;
-          botMsg.textContent = fullReply;
-          container.scrollTop = container.scrollHeight;
-        }
+        if (!response.ok) throw new Error("Eroare de rețea");
 
-        messagesHistory.push({ role: "assistant", content: fullReply });
-        speakText(fullReply);
+        const reply = await response.text();
+        
+        botMsg.textContent = reply;
+        conversationHistory.push({ role: "assistant", content: reply });
+        
+        speakText(reply);
+        container.scrollTop = container.scrollHeight;
 
       } catch (err) {
-        botMsg.textContent = "A apărut o eroare în timpul generării răspunsului neuronal.";
+        botMsg.textContent = "A apărut o eroare de comunicare cu serverul AI. Te rog să încerci din nou.";
         console.error(err);
       }
-    };
+    }
 
     document.getElementById('userInput').addEventListener('keypress', function(e) {
       if (e.key === 'Enter') {
-        window.sendMessage();
+        sendMessage();
       }
     });
-
-    // Pornirea automată a inițializării la încărcarea paginii
-    initAI();
   </script>
 
 </body>
