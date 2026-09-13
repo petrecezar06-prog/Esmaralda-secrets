@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="ro">
-<head><link rel="manifest" href="manifest.json">
-
+<head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Esmeralda Secrets</title>
@@ -9,6 +8,7 @@
   <!-- Iconița personalizată pentru aplicație și favicon -->
   <link rel="icon" type="image/png" href="1789292830725.png">
   <link rel="apple-touch-icon" href="1789292830725.png">
+  <link rel="manifest" href="manifest.json">
 
   <style>
     :root {
@@ -167,7 +167,6 @@
 
       if (!text) return;
 
-      // Mesajul utilizatorului
       const userMsg = document.createElement('div');
       userMsg.className = 'message user';
       userMsg.textContent = text;
@@ -176,7 +175,6 @@
       input.value = '';
       container.scrollTop = container.scrollHeight;
 
-      // Răspunsul simțit / adaptat al Esmeraldei
       setTimeout(() => {
         const botMsg = document.createElement('div');
         botMsg.className = 'message bot';
@@ -186,7 +184,6 @@
       }, 1000);
     }
 
-    // Permite trimiterea mesajului și prin tasta Enter
     document.getElementById('userInput').addEventListener('keypress', function (e) {
       if (e.key === 'Enter') {
         sendMessage();
