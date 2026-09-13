@@ -160,7 +160,7 @@
   </div>
 
   <script>
-    function sendMessage() {
+    async function sendMessage() {
       const input = document.getElementById('userInput');
       const container = document.getElementById('chatContainer');
       const text = input.value.trim();
@@ -175,13 +175,41 @@
       input.value = '';
       container.scrollTop = container.scrollHeight;
 
-      setTimeout(() => {
-        const botMsg = document.createElement('div');
-        botMsg.className = 'message bot';
-        botMsg.textContent = "Am recepționat mesajul tău. Lumea noastră ascunde multe taine... spune-mi mai multe.";
-        container.appendChild(botMsg);
-        container.scrollTop = container.scrollHeight;
-      }, 1000);
+      const botMsg = document.createElement('div');
+      botMsg.className = 'message bot';
+      botMsg.textContent = "Esmeralda gândește...";
+      container.appendChild(botMsg);
+      container.scrollTop = container.scrollHeight;
+
+      try {
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer CHEIA_TA_OPENAI_AICI'
+          },
+          body: JSON.stringify({
+            model: "gpt-4o-mini",
+            messages: [
+              { role: "system", content: "Ești Esmeralda, o prezență misterioasă și fermecătoare dintr-un club virtual exclusiv numit Esmeralda Secrets. Răspunzi în limba română." },
+              { role: "user", content: text }
+            ],
+          })
+        });
+
+        const data = await response.json();
+        if (data.choices && data.choices.length > 0) {
+          botMsg.textContent = data.choices[0].message.content;
+        } else if (data.error) {
+          botMsg.textContent = "Eroare API: " + data.error.message;
+        } else {
+          botMsg.textContent = "Am întâmpinat o problemă la conexiune.";
+        }
+      } catch (error) {
+        botMsg.textContent = "A apărut o eroare de rețea.";
+      }
+
+      container.scrollTop = container.scrollHeight;
     }
 
     document.getElementById('userInput').addEventListener('keypress', function (e) {
