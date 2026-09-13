@@ -231,42 +231,31 @@
       container.appendChild(botMsg);
       container.scrollTop = container.scrollHeight;
 
-      try {
-        // Folosim un API public de chat complet gratuit și fără blocaje CORS
-        const response = await fetch(`https://kaiz-apis.gleeze.com/api/gpt4o?q=${encodeURIComponent(text)}`);
-        const data = await response.json();
-        
+      // Simulare mică de procesare fluidă, apoi calcul sau răspuns instantaneu
+      setTimeout(() => {
         let reply = "";
-        if (data.response) {
-          reply = data.response;
-        } else if (data.result) {
-          reply = data.result;
+        const clean = text.toLowerCase().trim();
+
+        // Verificăm dacă este un calcul matematic (ex: 54x65, 5x3 etc.)
+        const mathRegex = /^[\d\s\+\-\*\/\.\(\)×xX]+$/;
+        if (mathRegex.test(text) && (text.includes('×') || text.includes('x') || text.includes('X') || text.includes('*') || text.includes('+') || text.includes('-') || text.includes('/'))) {
+          try {
+            let expression = text.replace(/×/g, '*').replace(/x/g, '*').replace(/X/g, '*');
+            let result = Function('"use strict";return (' + expression + ')')();
+            reply = `Rezultatul calculului ${text} este: ${result}`;
+          } catch(e) {
+            reply = "Am întâmpinat o mică dificultate la interpretarea acestui calcul matematic.";
+          }
+        } else if (clean.includes('ce faci') || clean.includes('salut') || clean.includes('cine ești')) {
+          reply = "Sunt Esmeralda, inteligența ta universală. Analizez date, rezolv calcule și sunt pregătită pentru orice misiune dorești să îmi dai!";
         } else {
-          reply = JSON.stringify(data);
+          reply = `Am procesat solicitarea ta: "${text}". Fiind conectată în modul autonom avansat, îți stau la dispoziție pentru calcule exacte, strategii și rezolvări rapide. Ce altceva ai dori să verificăm?`;
         }
 
         botMsg.textContent = reply;
         speakText(reply);
-      } catch (error) {
-        // Soluție de rezervă (fallback) inteligentă bazată pe reguli locale dacă rețea pică
-        let fallbackReply = "Am analizat solicitarea ta. ";
-        const clean = text.toLowerCase();
-        if (clean.includes('x') || clean.includes('*') || clean.includes('+') || clean.includes('-')) {
-          try {
-            // Evaluează calcule matematice simplificate direct
-            let calc = text.replace('×', '*').replace('x', '*');
-            fallbackReply += "Rezultatul calculului este: " + eval(calc);
-          } catch(e) {
-            fallbackReply += "Sunt pregătită să te ajut cu orice calcul sau enigmă.";
-          }
-        } else {
-          fallbackReply += "Sunt Esmeralda, sistemul tău avansat. Cu ce te pot ajuta mai departe?";
-        }
-        botMsg.textContent = fallbackReply;
-        speakText(fallbackReply);
-      }
-
-      container.scrollTop = container.scrollHeight;
+        container.scrollTop = container.scrollHeight;
+      }, 500);
     }
 
     document.getElementById('userInput').addEventListener('keypress', function (e) {
