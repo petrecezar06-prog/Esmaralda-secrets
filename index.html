@@ -232,34 +232,29 @@
       container.scrollTop = container.scrollHeight;
 
       try {
-        // Conexiune online directă către un motor cognitiv universal
-        const systemPrompt = "Ești Esmeralda, o super-inteligență artificială universală, extrem de avansată, profundă și inteligentă, care comunică fluent în limba română.";
-        const fullQuery = `${systemPrompt}\nUtilizatorul întreabă: ${text}`;
-        
-        const response = await fetch(`https://kaiz-apis.gleeze.com/api/gpt4o?q=${encodeURIComponent(fullQuery)}`);
+        const query = "Ești Esmeralda, o super-inteligență artificială universală, extrem de avansată și profundă. Răspunde în limba română la: " + text;
+        const response = await fetch("https://kaiz-apis.gleeze.com/api/gpt4o?q=" + encodeURIComponent(query));
         const data = await response.json();
 
-        let reply = "";
+        let reply = "Nu am putut genera un răspuns.";
         if (data.response) {
           reply = data.response;
         } else if (data.result) {
           reply = data.result;
         } else if (typeof data === 'string') {
           reply = data;
-        } else {
-          reply = JSON.stringify(data);
         }
 
         botMsg.textContent = reply;
         speakText(reply);
       } catch (error) {
-        botMsg.textContent = "Eroare de conexiune la rețeaua globală. Verifică conexiunea la internet și încearcă din nou.";
+        botMsg.textContent = "A apărut o problemă de conexiune online. Te rog să reîncerci.";
       }
 
       container.scrollTop = container.scrollHeight;
     }
 
-    document.getElementById('userInput').addEventListener('keypress', function (e) {
+    document.getElementById('userInput').addEventListener('keypress', function(e) {
       if (e.key === 'Enter') {
         sendMessage();
       }
