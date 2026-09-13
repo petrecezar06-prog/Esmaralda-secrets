@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="ro">
-<head><link rel="icon" type="image/png" href="1789292830725.png">
-<link rel="apple-touch-icon" href="1789292830725.png">
-
+<head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Esmeralda Secrets</title>
+  
+  <!-- Iconița personalizată pentru aplicație și favicon -->
+  <link rel="icon" type="image/png" href="1789292830725.png">
+  <link rel="apple-touch-icon" href="1789292830725.png">
+
   <style>
     :root {
       --bg-color: #0f172a;
@@ -15,111 +18,122 @@
       --user-msg: #3b82f6;
       --bot-msg: #334155;
     }
-    body {
+
+    * {
+      box-sizing: border-box;
       margin: 0;
       padding: 0;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
       background-color: var(--bg-color);
       color: var(--text-color);
       display: flex;
       flex-direction: column;
       height: 100vh;
+      height: 100dvh;
     }
+
     header {
       background-color: var(--chat-bg);
-      padding: 15px;
+      padding: 15px 20px;
       display: flex;
       align-items: center;
-      gap: 15px;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      border-bottom: 1px solid #334155;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
+
     .avatar {
-      width: 50px;
-      height: 50px;
+      width: 45px;
+      height: 45px;
       border-radius: 50%;
       background: linear-gradient(135deg, #ec4899, #8b5cf6);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 24px;
       font-weight: bold;
+      font-size: 20px;
       color: white;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      margin-right: 15px;
     }
-    .title-container h1 {
-      margin: 0;
-      font-size: 1.2rem;
-      color: var(--accent-color);
+
+    .header-info h1 {
+      font-size: 18px;
+      font-weight: 600;
     }
-    .title-container p {
-      margin: 0;
-      font-size: 0.85rem;
+
+    .header-info p {
+      font-size: 12px;
       color: #94a3b8;
     }
-    #chatBox {
+
+    .chat-container {
       flex: 1;
-      padding: 20px;
       overflow-y: auto;
+      padding: 20px;
       display: flex;
       flex-direction: column;
       gap: 15px;
     }
+
     .message {
       max-width: 80%;
       padding: 12px 16px;
-      border-radius: 15px;
+      border-radius: 12px;
+      font-size: 14px;
       line-height: 1.5;
-      font-size: 0.95rem;
       word-wrap: break-word;
     }
-    .user-message {
-      background-color: var(--user-msg);
-      color: white;
-      align-self: flex-end;
-      border-bottom-right-radius: 2px;
-    }
-    .bot-message {
+
+    .message.bot {
       background-color: var(--bot-msg);
-      color: var(--text-color);
       align-self: flex-start;
       border-bottom-left-radius: 2px;
     }
+
+    .message.user {
+      background-color: var(--user-msg);
+      align-self: flex-end;
+      border-bottom-right-radius: 2px;
+    }
+
     .input-container {
-      padding: 15px;
+      padding: 15px 20px;
       background-color: var(--chat-bg);
       display: flex;
       gap: 10px;
-      box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
+      border-top: 1px solid #334155;
     }
-    #userInput {
+
+    input[type="text"] {
       flex: 1;
-      padding: 12px 16px;
-      border-radius: 25px;
-      border: 1px solid #475569;
       background-color: #0f172a;
-      color: white;
-      font-size: 1rem;
+      border: 1px solid #475569;
+      border-radius: 8px;
+      padding: 12px 15px;
+      color: var(--text-color);
+      font-size: 14px;
       outline: none;
     }
-    #userInput:focus {
+
+    input[type="text"]:focus {
       border-color: var(--accent-color);
     }
+
     button {
       background-color: var(--accent-color);
       color: white;
       border: none;
+      border-radius: 8px;
       padding: 0 20px;
-      border-radius: 25px;
-      font-weight: bold;
+      font-weight: 600;
       cursor: pointer;
-      transition: background 0.2s;
+      transition: opacity 0.2s;
     }
+
     button:hover {
       opacity: 0.9;
-    }
-    button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
     }
   </style>
 </head>
@@ -127,14 +141,16 @@
 
   <header>
     <div class="avatar">E</div>
-    <div class="title-container">
+    <div class="header-info">
       <h1>Esmeralda Secrets</h1>
-      <p>Online & Pregătită</p>
+      <p>Online • Virtual Club</p>
     </div>
   </header>
 
-  <div id="chatBox">
-    <div class="message bot-message">Salut! Eu sunt Esmeralda. Cu ce te pot ajuta astăzi?</div>
+  <div class="chat-container" id="chatContainer">
+    <div class="message bot">
+      Salut! Eu sunt Esmeralda. Cu ce te pot ajuta în clubul nostru în această zi?
+    </div>
   </div>
 
   <div class="input-container">
@@ -143,74 +159,39 @@
   </div>
 
   <script>
-    const WORKER_URL = 'https://nameless-block-036e.petre-cezar06.workers.dev/';
-
-    async function sendMessage() {
+    function sendMessage() {
       const input = document.getElementById('userInput');
-      const chatBox = document.getElementById('chatBox');
-      if (!input || !chatBox) return;
-
+      const container = document.getElementById('chatContainer');
       const text = input.value.trim();
+
       if (!text) return;
 
-      input.disabled = true;
+      // Mesajul utilizatorului
+      const userMsg = document.createElement('div');
+      userMsg.className = 'message user';
+      userMsg.textContent = text;
+      container.appendChild(userMsg);
 
-      const userDiv = document.createElement('div');
-      userDiv.className = 'message user-message';
-      userDiv.textContent = text;
-      chatBox.appendChild(userDiv);
       input.value = '';
-      chatBox.scrollTop = chatBox.scrollHeight;
+      container.scrollTop = container.scrollHeight;
 
-      const botDiv = document.createElement('div');
-      botDiv.className = 'message bot-message';
-      botDiv.textContent = 'Esmeralda gândește...';
-      chatBox.appendChild(botDiv);
-      chatBox.scrollTop = chatBox.scrollHeight;
-
-      try {
-        const response = await fetch(WORKER_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: text })
-        });
-
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-          throw new Error('Răspuns invalid de la server.');
-        }
-
-        const data = await response.json();
-        
-        if (data.choices && data.choices[0]?.message?.content) {
-          botDiv.textContent = data.choices[0].message.content;
-        } else if (data.reply) {
-          botDiv.textContent = data.reply;
-        } else if (data.error) {
-          botDiv.textContent = 'Eroare API: ' + (data.error.message || JSON.stringify(data.error));
-        } else {
-          botDiv.textContent = 'Nu am putut citi răspunsul de la Esmeralda.';
-        }
-      } catch (error) {
-        botDiv.textContent = 'Eroare de conexiune sau server indisponibil.';
-      } finally {
-        input.disabled = false;
-        input.focus();
-        chatBox.scrollTop = chatBox.scrollHeight;
-      }
+      // Răspunsul simțit / adaptat al Esmeraldei
+      setTimeout(() => {
+        const botMsg = document.createElement('div');
+        botMsg.className = 'message bot';
+        botMsg.textContent = "Am recepționat mesajul tău. Lumea noastră ascunde multe taine... spune-mi mai multe.";
+        container.appendChild(botMsg);
+        container.scrollTop = container.scrollHeight;
+      }, 1000);
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-      const input = document.getElementById('userInput');
-      if (input) {
-        input.addEventListener('keypress', function(e) {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            sendMessage();
-          }
-        });
+    // Permite trimiterea mesajului și prin tasta Enter
+    document.getElementById('userInput').addEventListener('keypress', function (e) {
+      if (e.key === 'Enter') {
+        sendMessage();
       }
     });
   </script>
+
 </body>
 </html>
