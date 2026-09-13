@@ -1,67 +1,214 @@
-const WORKER_URL = 'https://nameless-block-036e.petre-cezar06.workers.dev/';
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Esmeralda Secrets</title>
+  <style>
+    :root {
+      --bg-color: #0f172a;
+      --chat-bg: #1e293b;
+      --text-color: #f8fafc;
+      --accent-color: #ec4899;
+      --user-msg: #3b82f6;
+      --bot-msg: #334155;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    header {
+      background-color: var(--chat-bg);
+      padding: 15px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    .avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ec4899, #8b5cf6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: bold;
+      color: white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    .title-container h1 {
+      margin: 0;
+      font-size: 1.2rem;
+      color: var(--accent-color);
+    }
+    .title-container p {
+      margin: 0;
+      font-size: 0.85rem;
+      color: #94a3b8;
+    }
+    #chatBox {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    .message {
+      max-width: 80%;
+      padding: 12px 16px;
+      border-radius: 15px;
+      line-height: 1.5;
+      font-size: 0.95rem;
+      word-wrap: break-word;
+    }
+    .user-message {
+      background-color: var(--user-msg);
+      color: white;
+      align-self: flex-end;
+      border-bottom-right-radius: 2px;
+    }
+    .bot-message {
+      background-color: var(--bot-msg);
+      color: var(--text-color);
+      align-self: flex-start;
+      border-bottom-left-radius: 2px;
+    }
+    .input-container {
+      padding: 15px;
+      background-color: var(--chat-bg);
+      display: flex;
+      gap: 10px;
+      box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    #userInput {
+      flex: 1;
+      padding: 12px 16px;
+      border-radius: 25px;
+      border: 1px solid #475569;
+      background-color: #0f172a;
+      color: white;
+      font-size: 1rem;
+      outline: none;
+    }
+    #userInput:focus {
+      border-color: var(--accent-color);
+    }
+    button {
+      background-color: var(--accent-color);
+      color: white;
+      border: none;
+      padding: 0 20px;
+      border-radius: 25px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover {
+      opacity: 0.9;
+    }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
 
-async function sendMessage() {
-  const input = document.getElementById('userInput');
-  const chatBox = document.getElementById('chatBox');
-  if (!input || !chatBox) return;
+  <header>
+    <div class="avatar">E</div>
+    <div class="title-container">
+      <h1>Esmeralda Secrets</h1>
+      <p>Online & Pregătită</p>
+    </div>
+  </header>
 
-  const text = input.value.trim();
-  if (!text) return;
+  <div id="chatBox">
+    <div class="message bot-message">Salut! Eu sunt Esmeralda. Cu ce te pot ajuta astăzi?</div>
+  </div>
 
-  input.disabled = true;
+  <div class="input-container">
+    <input type="text" id="userInput" placeholder="Scrie un mesaj..." autocomplete="off">
+    <button onclick="sendMessage()">Trimite</button>
+  </div>
 
-  const userDiv = document.createElement('div');
-  userDiv.className = 'message user-message';
-  userDiv.textContent = text;
-  chatBox.appendChild(userDiv);
-  input.value = '';
-  chatBox.scrollTop = chatBox.scrollHeight;
+  <script>
+    const WORKER_URL = 'https://nameless-block-036e.petre-cezar06.workers.dev/';
 
-  const botDiv = document.createElement('div');
-  botDiv.className = 'message bot-message';
-  botDiv.textContent = 'Esmeralda gândește...';
-  chatBox.appendChild(botDiv);
-  chatBox.scrollTop = chatBox.scrollHeight;
+    async function sendMessage() {
+      const input = document.getElementById('userInput');
+      const chatBox = document.getElementById('chatBox');
+      if (!input || !chatBox) return;
 
-  try {
-    const response = await fetch(WORKER_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: text })
+      const text = input.value.trim();
+      if (!text) return;
+
+      input.disabled = true;
+
+      const userDiv = document.createElement('div');
+      userDiv.className = 'message user-message';
+      userDiv.textContent = text;
+      chatBox.appendChild(userDiv);
+      input.value = '';
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      const botDiv = document.createElement('div');
+      botDiv.className = 'message bot-message';
+      botDiv.textContent = 'Esmeralda gândește...';
+      chatBox.appendChild(botDiv);
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      try {
+        const response = await fetch(WORKER_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: text })
+        });
+
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          throw new Error('Răspuns invalid de la server.');
+        }
+
+        const data = await response.json();
+        
+        if (data.choices && data.choices[0]?.message?.content) {
+          botDiv.textContent = data.choices[0].message.content;
+        } else if (data.reply) {
+          botDiv.textContent = data.reply;
+        } else if (data.error) {
+          botDiv.textContent = 'Eroare API: ' + (data.error.message || JSON.stringify(data.error));
+        } else {
+          botDiv.textContent = 'Nu am putut citi răspunsul de la Esmeralda.';
+        }
+      } catch (error) {
+        botDiv.textContent = 'Eroare de conexiune sau server indisponibil.';
+      } finally {
+        input.disabled = false;
+        input.focus();
+        chatBox.scrollTop = chatBox.scrollHeight;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const input = document.getElementById('userInput');
+      if (input) {
+        input.addEventListener('keypress', function(e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            sendMessage();
+          }
+        });
+      }
     });
-
-    const contentType = response.headers.get('content-type');
-    if (!contentType || !contentType.includes('application/json')) {
-      throw new Error('Răspuns invalid de la server.');
-    }
-
-    const data = await response.json();
-    
-    // Suport dublu: răspuns direct de la OpenRouter SAU răspuns procesat de Worker
-    if (data.choices && data.choices[0]?.message?.content) {
-      botDiv.textContent = data.choices[0].message.content;
-    } else if (data.reply) {
-      botDiv.textContent = data.reply;
-    } else if (data.error) {
-      botDiv.textContent = 'Eroare API: ' + (data.error.message || JSON.stringify(data.error));
-    } else {
-      botDiv.textContent = 'Nu am putut citi răspunsul de la Esmeralda.';
-    }
-  } catch (error) {
-    botDiv.textContent = 'Eroare de conexiune sau server indisponibil.';
-  } finally {
-    input.disabled = false;
-    input.focus();
-    chatBox.scrollTop = chatBox.scrollHeight;
-  }
-}
-
-// Protecție împotriva paginii albe: atașăm evenimentul doar după ce DOM-ul este complet încărcat
-document.addEventListener('DOMContentLoaded', () => {
-  const input = document.getElementById('userInput');
-  if (input) {
-    input.addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        sendMessage();
-    
+  </script>
+</body>
+</html>
