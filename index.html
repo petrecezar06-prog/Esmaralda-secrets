@@ -200,13 +200,11 @@
         const data = await response.json();
         if (data.choices && data.choices.length > 0) {
           botMsg.textContent = data.choices[0].message.content;
-        } else if (data.error) {
-          botMsg.textContent = "Eroare API: " + data.error.message;
         } else {
-          botMsg.textContent = "Am întâmpinat o problemă la conexiune.";
+          botMsg.textContent = "Eroare detaliată: " + JSON.stringify(data);
         }
       } catch (error) {
-        botMsg.textContent = "A apărut o eroare de rețea.";
+        botMsg.textContent = "Eroare de conexiune: " + error.message;
       }
 
       container.scrollTop = container.scrollHeight;
