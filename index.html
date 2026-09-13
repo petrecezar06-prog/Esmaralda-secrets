@@ -181,10 +181,13 @@
       container.scrollTop = container.scrollHeight;
 
       try {
-        const response = await fetch('https://nameless-block-036e.petre-cezar06.workers.dev', {
+        const response = await fetch('https://corsproxy.io/?' + encodeURIComponent('https://openrouter.ai/api/v1/chat/completions'), {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer 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',
+            'HTTP-Referer': window.location.origin,
+            'X-Title': 'Esmeralda Secrets'
           },
           body: JSON.stringify({
             model: "openai/gpt-4o-mini",
@@ -199,7 +202,7 @@
         if (data.choices && data.choices.length > 0) {
           botMsg.textContent = data.choices[0].message.content;
         } else if (data.error) {
-          botMsg.textContent = "Eroare: " + (data.error.message || JSON.stringify(data.error));
+          botMsg.textContent = "Eroare OpenRouter: " + (data.error.message || JSON.stringify(data.error));
         } else {
           botMsg.textContent = "Răspuns neașteptat: " + JSON.stringify(data);
         }
