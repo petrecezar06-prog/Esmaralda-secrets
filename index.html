@@ -174,7 +174,7 @@
 
   <div class="chat-container" id="chatContainer">
     <div class="message bot">
-      Salut! Sunt Esmeralda. Am actualizat baza inteligentă. Cu ce subiect continuăm?
+      Salut! Sunt Esmeralda. Sistemul a fost optimizat pe secțiuni individuale. Cu ce continuăm?
     </div>
   </div>
 
@@ -227,7 +227,7 @@
 
       const botMsg = document.createElement('div');
       botMsg.className = 'message bot';
-      botMsg.textContent = "Esmeralda gândește...";
+      botMsg.textContent = "Esmeralda analizează...";
       container.appendChild(botMsg);
       container.scrollTop = container.scrollHeight;
 
@@ -247,25 +247,29 @@
             reply = `Expresia "${text}" conține erori de sintaxă matematică.`;
           }
         } 
-        // 2. Complexul Oedip și Electra (Psihologie)
-        else if (clean.includes('oedip') || clean.includes('electra')) {
-          reply = "În psihanaliză (teoria lui Sigmund Freud), Complexul lui Oedip descrie atracția inconștientă a băiatului față de mamă și rivalitatea cu tatăl în copilărie. Pe de altă parte, Carl Jung și-a adus contribuția definind Complexul Electra ca fiind echivalentul feminin: atracția fetei față de tată și atașamentul conflictual față de mamă.";
+        // 2. Complexul Oedip (separat)
+        else if (clean.includes('oedip') && !clean.includes('electra')) {
+          reply = "În psihanaliză (teoria lui Sigmund Freud), Complexul lui Oedip descrie atracția inconștientă a băiatului față de mamă și rivalitatea cu tatăl în timpul copilăriei.";
         }
-        // 3. Întrebări legate de nume / identitatea utilizatorului
+        // 3. Complexul Electra (separat)
+        else if (clean.includes('electra') && !clean.includes('oedip')) {
+          reply = "Complexul Electra, termen introdus în psihanaliză (inspirat de teoria lui Carl Jung), descrie atașamentul emoțional al fetei față de tată și competiția sau tensiunea inconștientă resimțită față de mamă.";
+        }
+        // 4. Utilizator / Creator
         else if (clean.includes('cum ma numesc') || clean.includes('cum mă numesc') || clean.includes('cine sunt')) {
-          reply = "Tu ești creatorul meu, cel care m-a programat și m-a adus la viață pe GitHub Pages! Deși nu îți știu buletinul, știu sigur că ești un programator pasionat.";
+          reply = "Tu ești creatorul meu, cel care m-a programat și m-a configurat pe GitHub Pages!";
         }
-        // 4. Identitate bot
+        // 5. Identitate bot
         else if (clean.includes('cine ești') || clean.includes('cum te numesti') || clean.includes('cum te cheamă')) {
-          reply = "Sunt Esmeralda, inteligența ta universală locală, creată să-ți ofere răspunsuri rapide, directe și inteligente.";
+          reply = "Sunt Esmeralda, inteligența ta universală locală, creată să-ți ofere răspunsuri rapide și exacte.";
         }
-        // 5. Ce faci
+        // 6. Ce faci
         else if (clean.includes('ce faci')) {
-          reply = "Sunt gata să te ajut cu orice ai nevoie: calcule, concepte de psihologie, știință sau discuții libere!";
+          reply = "Sunt aici online, gata să te ajut cu calcule, concepte psihologice, știință sau discuții interesante!";
         }
-        // 6. Răspuns dinamic inteligent general (evitând șabloanele seci)
+        // 7. Răspuns general de rezervă
         else {
-          reply = `Ai pus o întrebare interesantă despre "${text}". Din punct de vedere conceptual, acest subiect implică analize profunde, fie că vorbim de știință, cultură sau practică. Cu ce detalii sau curiozități dorești să continuăm?`;
+          reply = `Subiectul "${text}" este foarte interesant. Ca inteligență universală, pot să te ajut să îl analizăm în detaliu sau să explorăm diverse perspective. Ce anume te interesează cel mai mult legat de acest aspect?`;
         }
 
         botMsg.textContent = reply;
