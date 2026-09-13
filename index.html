@@ -231,31 +231,34 @@
       container.appendChild(botMsg);
       container.scrollTop = container.scrollHeight;
 
-      // Simulare mică de procesare fluidă, apoi calcul sau răspuns instantaneu
       setTimeout(() => {
         let reply = "";
         const clean = text.toLowerCase().trim();
 
-        // Verificăm dacă este un calcul matematic (ex: 54x65, 5x3 etc.)
-        const mathRegex = /^[\d\s\+\-\*\/\.\(\)×xX]+$/;
-        if (mathRegex.test(text) && (text.includes('×') || text.includes('x') || text.includes('X') || text.includes('*') || text.includes('+') || text.includes('-') || text.includes('/'))) {
+        // Curățăm expresia matematică pentru a înlocui orice variantă de 'x' sau '×' cu '*'
+        let mathExpression = text.replace(/×/g, '*').replace(/x/g, '*').replace(/X/g, '*');
+
+        // Verificăm dacă textul conține cifre și operatori matematici de bază
+        const hasNumbers = /\d/.test(text);
+        const hasOperators = /[\+\-\*\/]/.test(mathExpression);
+
+        if (hasNumbers && (hasOperators || mathExpression.includes('*'))) {
           try {
-            let expression = text.replace(/×/g, '*').replace(/x/g, '*').replace(/X/g, '*');
-            let result = Function('"use strict";return (' + expression + ')')();
+            let result = Function('"use strict";return (' + mathExpression + ')')();
             reply = `Rezultatul calculului ${text} este: ${result}`;
           } catch(e) {
-            reply = "Am întâmpinat o mică dificultate la interpretarea acestui calcul matematic.";
+            reply = `Am analizat expresia "${text}", dar a intervenit o eroare de calcul.`;
           }
         } else if (clean.includes('ce faci') || clean.includes('salut') || clean.includes('cine ești')) {
-          reply = "Sunt Esmeralda, inteligența ta universală. Analizez date, rezolv calcule și sunt pregătită pentru orice misiune dorești să îmi dai!";
+          reply = "Sunt Esmeralda, inteligența ta universală. Sunt pregătită pentru calcule, enigme și strategii avansate!";
         } else {
-          reply = `Am procesat solicitarea ta: "${text}". Fiind conectată în modul autonom avansat, îți stau la dispoziție pentru calcule exacte, strategii și rezolvări rapide. Ce altceva ai dori să verificăm?`;
+          reply = `Am procesat solicitarea ta: "${text}". Sunt conectată și gata să te ajut cu orice ai nevoie. Ce vrei să verificăm în continuare?`;
         }
 
         botMsg.textContent = reply;
         speakText(reply);
         container.scrollTop = container.scrollHeight;
-      }, 500);
+      }, 400);
     }
 
     document.getElementById('userInput').addEventListener('keypress', function (e) {
