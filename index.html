@@ -174,12 +174,12 @@
 
   <div class="chat-container" id="chatContainer">
     <div class="message bot">
-      Salut! Sunt Esmeralda. Am actualizat baza de cunoștințe complet. Ce vrei să discutăm acum?
+      Salut! Sunt Esmeralda. Pregătită să discutăm despre capacitățile mele sau orice alt subiect. Cu ce începem?
     </div>
   </div>
 
   <div class="input-container">
-    <input type="text" id="userInput" placeholder="Scrie orice întrebare..." autocomplete="off">
+    <input type="text" id="userInput" placeholder="Întreabă-mă orice..." autocomplete="off">
     <button class="send-btn" onclick="sendMessage()">Trimite</button>
   </div>
 
@@ -227,7 +227,7 @@
 
       const botMsg = document.createElement('div');
       botMsg.className = 'message bot';
-      botMsg.textContent = "Esmeralda generează răspunsul...";
+      botMsg.textContent = "Esmeralda procesează...";
       container.appendChild(botMsg);
       container.scrollTop = container.scrollHeight;
 
@@ -235,7 +235,7 @@
         let reply = "";
         const clean = text.toLowerCase();
 
-        // 1. Verificare matematică avansată
+        // 1. Verificare matematică
         let mathExp = text.replace(/×/g, '*').replace(/x/g, '*').replace(/X/g, '*');
         const hasMath = /\d/.test(text) && /[\+\-\*\/]/.test(mathExp);
 
@@ -247,13 +247,13 @@
             reply = `Expresia "${text}" conține erori de sintaxă matematică.`;
           }
         } 
-        // 2. Vinuri din România
-        else if (clean.includes('vin') || clean.includes('alb') || clean.includes('romania')) {
-          reply = "România are regiuni viticole excepționale. Printre cele mai apreciate vinuri albe se numără Feteasca Albă, Feteasca Regală și Tămâioasa Românească (de la ⁠Camele, Dealu Mare sau Jidvei), recunoscute internațional pentru complexitatea și aromele lor fructate.";
+        // 2. Cât de avansată ești / Comparație AI / Top 100
+        else if (clean.includes('avansata') || clean.includes('avansată') || clean.includes('loc') || clean.includes('top 100') || clean.includes('ce inteligenta') || clean.includes('ce inteligență')) {
+          reply = "Sunt o inteligență universală optimizada pentru rulare locală, concepută să fie extrem de rapidă, stabilă și independentă. Nu concura în topuri tradiționale cu modele gigantice de pe servere uriașe, dar avantajul meu major este că funcționez direct la tine pe dispozitiv, oferind răspunsuri instantanee fără întreruperi!";
         }
-        // 3. Dumnezeu / Religie
-        else if (clean.includes('dumnezeu') || clean.includes('exista') || clean.includes('religie')) {
-          reply = "Întrebarea despre existența divinității este centrală în filozofie și teologie. Dincolo de dovezile empirice, credința se bazează pe experiența spirituală interioară, ordinea complexă a universului și căutarea sensului vieții de către om.";
+        // 3. Subiecte despre viață / moarte / Dumnezeu
+        else if (clean.includes('viata dupa moarte') || clean.includes('viața după moarte') || clean.includes('dumnezeu') || clean.includes('suflet')) {
+          reply = "Aceasta este una dintre cele mai profunde dileme ale umanității. Din perspectivă filozofică și spirituală, existența dincolo de viața fizică a fascinat civilizațiile de milenii, fiind legată de conștiință, energie universală și credință.";
         }
         // 4. Identitate
         else if (clean.includes('cine ești') || clean.includes('cum te numesti') || clean.includes('cum te cheamă')) {
@@ -261,17 +261,17 @@
         }
         // 5. Ce faci
         else if (clean.includes('ce faci')) {
-          reply = "Sunt aici online, gata să te ajut cu orice ai nevoie: de la calcule matematice și cultură generală, până la sfaturi și discuții interesante!";
+          reply = "Sunt aici online, gata să te ajut cu orice ai nevoie: de la calcule matematice și cultură generală, până la discuții interesante!";
         }
-        // 6. Răspuns dinamic inteligent bazat pe cuvinte cheie din textul tău
+        // 6. Răspuns general de rezervă inteligent
         else {
-          reply = `Am analizat subiectul referitor la "${text}". Este o chestiune amplă care depinde de mai mulți factori de context. În general, abordarea corectă presupune o analiză atentă a detaliilor tehnice sau practice implicate. Vrei să detaliem un anumit aspect anume din această categorie?`;
+          reply = `Subiectul "${text}" este foarte interesant. Ca inteligență universală, pot să te ajut să îl analizăm în detaliu, să găsim soluții practice sau să explorăm diverse perspective. Ce anume te interesează cel mai mult legat de acest aspect?`;
         }
 
         botMsg.textContent = reply;
         speakText(reply);
         container.scrollTop = container.scrollHeight;
-      }, 400);
+      }, 350);
     }
 
     document.getElementById('userInput').addEventListener('keypress', function(e) {
