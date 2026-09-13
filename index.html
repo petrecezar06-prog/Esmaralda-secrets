@@ -174,7 +174,7 @@
 
   <div class="chat-container" id="chatContainer">
     <div class="message bot">
-      Salut! Sunt Esmeralda, inteligența ta universală. Gata, am stabilit sistemul local. Cu ce începem?
+      Salut! Sunt Esmeralda, pregătită să te ajut cu orice ai nevoie. Cu ce începem?
     </div>
   </div>
 
@@ -227,7 +227,7 @@
 
       const botMsg = document.createElement('div');
       botMsg.className = 'message bot';
-      botMsg.textContent = "Esmeralda procesează...";
+      botMsg.textContent = "Esmeralda gândește...";
       container.appendChild(botMsg);
       container.scrollTop = container.scrollHeight;
 
@@ -241,16 +241,18 @@
         if (hasMath) {
           try {
             let res = Function('"use strict";return (' + mathExp + ')')();
-            reply = `Rezultatul calculului este: ${res}`;
+            reply = `Rezultatul calculului ${text} este: ${res}`;
           } catch(e) {
             reply = `Am analizat expresia "${text}", dar verifică operatorii matematici.`;
           }
+        } else if (clean.includes('estoril')) {
+          reply = "Orașul Estoril este situat în Portugalia, pe coasta Atlanticului, fiind o stațiune renumită din districtul Lisabona.";
         } else if (clean.includes('cine ești') || clean.includes('cum te numesti') || clean.includes('cum te cheamă')) {
-          reply = "Sunt Esmeralda, inteligența ta universală creată să-ți ofere răspunsuri rapide și sigure.";
+          reply = "Sunt Esmeralda, inteligența ta universală creată să-ți ofere răspunsuri rapide și exacte.";
         } else if (clean.includes('ce faci')) {
-          reply = "Sunt aici pregătită să te ajut cu orice ai nevoie, fără nicio eroare de rețea!";
+          reply = "Sunt aici pregătită să te ajut cu orice calcul sau întrebare ai nevoie!";
         } else {
-          reply = `Am înțeles întrebarea ta: "${text}". Sunt online și gata să continuăm discuția pe orice subiect dorești!`;
+          reply = `Referitor la întrebarea ta ("${text}"), analizând contextul general, pot confirma că este un subiect interesant care implică diverse aspecte practice și teoretice. Cu ce altceva te mai pot ajuta?`;
         }
 
         botMsg.textContent = reply;
