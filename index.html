@@ -227,41 +227,38 @@
 
       const botMsg = document.createElement('div');
       botMsg.className = 'message bot';
-      botMsg.textContent = "Esmeralda analizează...";
+      botMsg.textContent = "Esmeralda gândește...";
       container.appendChild(botMsg);
       container.scrollTop = container.scrollHeight;
 
-      setTimeout(() => {
+      try {
+        // Folosim un serviciu API public de inteligență artificială generativă avansată, accesibil direct via GET
+        const apiURL = `https://bk9.fun/ai/gpt4o?q=${encodeURIComponent("Ești Esmeralda, o super-inteligență artificială universală extrem de avansată și profundă, care răspunde în limba română. Răspunde la următoarea cerere: " + text)}`;
+        
+        const response = await fetch(apiURL);
+        const data = await response.json();
+
         let reply = "";
-        const clean = text.toLowerCase().trim();
-
-        // Curățăm expresia matematică pentru a înlocui orice variantă de 'x' sau '×' cu '*'
-        let mathExpression = text.replace(/×/g, '*').replace(/x/g, '*').replace(/X/g, '*');
-
-        // Verificăm dacă textul conține cifre și operatori matematici de bază
-        const hasNumbers = /\d/.test(text);
-        const hasOperators = /[\+\-\*\/]/.test(mathExpression);
-
-        if (hasNumbers && (hasOperators || mathExpression.includes('*'))) {
-          try {
-            let result = Function('"use strict";return (' + mathExpression + ')')();
-            reply = `Rezultatul calculului ${text} este: ${result}`;
-          } catch(e) {
-            reply = `Am analizat expresia "${text}", dar a intervenit o eroare de calcul.`;
-          }
-        } else if (clean.includes('ce faci') || clean.includes('salut') || clean.includes('cine ești')) {
-          reply = "Sunt Esmeralda, inteligența ta universală. Sunt pregătită pentru calcule, enigme și strategii avansate!";
+        if (data.status && data.result) {
+          reply = data.result;
+        } else if (data.gpt4o) {
+          reply = data.gpt4o;
+        } else if (typeof data === 'string') {
+          reply = data;
         } else {
-          reply = `Am procesat solicitarea ta: "${text}". Sunt conectată și gata să te ajut cu orice ai nevoie. Ce vrei să verificăm în continuare?`;
+          reply = JSON.stringify(data);
         }
 
         botMsg.textContent = reply;
         speakText(reply);
-        container.scrollTop = container.scrollHeight;
-      }, 400);
+      } catch (error) {
+        botMsg.textContent = "Eroare de conexiune la rețeaua neuronală. Te rog să încerci din nou.";
+      }
+
+      container.scrollTop = container.scrollHeight;
     }
 
-    document.getElementById('userInput').addEventListener('keypress', function (e) {
+    document.getElementById('userInput'].addEventListener('keypress', function (e) {
       if (e.key === 'Enter') {
         sendMessage();
       }
