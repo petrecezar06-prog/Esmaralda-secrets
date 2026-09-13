@@ -232,7 +232,6 @@
       container.scrollTop = container.scrollHeight;
 
       try {
-        // Folosim un serviciu de bypass CORS stabil pentru a trimite cererea sigură către Groq
         const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent('https://api.groq.com/openai/v1/chat/completions');
 
         const response = await fetch(proxyUrl, {
@@ -242,7 +241,7 @@
             'Authorization': 'Bearer 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'
           },
           body: JSON.stringify({
-            model: "llama-3.3-70b-versatile",
+            model: "llama3-8b-8192",
             messages: [
               { 
                 role: "system", 
