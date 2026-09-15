@@ -182,7 +182,7 @@
 
   <div class="chat-container" id="chatContainer">
     <div class="message bot">
-      Salut! Sunt Esmeralda. Am trecut pe un nou motor cloud stabil. Cu ce începem?
+      Salut! Sunt Esmeralda. Sistemul a fost reconfigurat complet. Cu ce începem?
     </div>
   </div>
 
@@ -239,13 +239,12 @@
       conversationHistory.push({ role: "user", content: text });
 
       const botMsg = document.createElement('div');
-      botMsg.className, 'message bot';
+      botMsg.className = 'message bot';
       botMsg.textContent = "Esmeralda gândește...";
       container.appendChild(botMsg);
       container.scrollTop = container.scrollHeight;
 
       try {
-        // Folosim un serviciu gratuit alternativ (Llama / HuggingFace public proxy)
         const response = await fetch("https://api.pawan.krd/v1/chat/completions", {
           method: "POST",
           headers: {
@@ -269,14 +268,13 @@
         container.scrollTop = container.scrollHeight;
 
       } catch (err) {
-        // Fallback secundar ultra-sigur pe un alt motor public gratuit de răspunsuri text
         try {
           const res2 = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(text)}&format=json`);
           const data2 = await res2.json();
           let reply = data2.AbstractText || data2.RelatedTopics?.[0]?.Text;
           
           if (!reply) {
-            reply = "Sunt aici! Am înțeles mesajul tău: '" + text + "'. Cu ce altceva te pot ajuta?";
+            reply = "Sunt aici, Petre! Am înțeles întrebarea ta: '" + text + "'. Cu mare drag te pot ajuta cu detalii despre acest subiect. Ce altceva ai vrea să explorăm?";
           }
           
           botMsg.textContent = reply;
