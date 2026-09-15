@@ -182,7 +182,7 @@
 
   <div class="chat-container" id="chatContainer">
     <div class="message bot">
-      Salut! Sunt Esmeralda. Conexiunea cloud este activă. Cu ce subiect începem?
+      Salut! Sunt Esmeralda. Sistemul a fost actualizat complet. Cu ce începem?
     </div>
   </div>
 
@@ -245,13 +245,22 @@
       container.scrollTop = container.scrollHeight;
 
       try {
-        const response = await fetch(`https://text.pollinations.ai/${encodeURIComponent(text)}`, {
-          method: "GET"
+        // Folosim un serviciu alternativ public de chat AI fără limitări de cheie
+        const response = await fetch("https://chat.pollinations.ai/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            model: "openai",
+            messages: conversationHistory
+          })
         });
 
-        if (!response.ok) throw new Error("Eroare de rețea");
+        if (!response.ok) throw new Error("Eroare de server");
 
-        const reply = await response.text();
+        const data = await response.json();
+        const reply = data.choices[0].message.content;
         
         botMsg.textContent = reply;
         conversationHistory.push({ role: "assistant", content: reply });
@@ -260,8 +269,17 @@
         container.scrollTop = container.scrollHeight;
 
       } catch (err) {
-        botMsg.textContent = "A apărut o problemă de conexiune temporară. Te rog să încerci din nou.";
-        console.error(err);
+        // Fallback inteligent în caz de eroare
+        try {
+          const fallbackRes = await fetch(`https://text.pollinations.ai/prompt/${encodeURIComponent(text)}`);
+          const reply = await fallbackRes.text();
+          botMsg.textContent = reply;
+          conversationHistory.push({ role: "assistant", content: reply });
+          speakText(reply);
+        } catch(e) {
+          botMsg.textContent = "Am întâmpinat o mică eroare de rețea. Te rog să trimiți din nou mesajul.";
+        }
+        container.scrollTop = container.scrollHeight;
       }
     }
 
