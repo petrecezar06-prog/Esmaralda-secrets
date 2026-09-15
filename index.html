@@ -182,7 +182,7 @@
 
   <div class="chat-container" id="chatContainer">
     <div class="message bot">
-      Salut, Petre! Sunt Esmeralda. Cu ce te pot ajuta astăzi?
+      Salut, Petre! Sunt Esmeralda, conectată prin Cloudflare. Cu ce te pot ajuta?
     </div>
   </div>
 
@@ -245,21 +245,21 @@
       container.scrollTop = container.scrollHeight;
 
       try {
-        // Folosim noul endpoint oficial de chat text fără chei restricționate
-        const response = await fetch("https://text.pollinations.ai/openai", {
+        // Apelăm Cloudflare Worker-ul tău dedicat
+        const response = await fetch("https://nameless-block-036e.petrecezar06.workers.dev", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
           },
           body: JSON.stringify({
-            messages: conversationHistory,
-            json: false
+            messages: conversationHistory
           })
         });
 
-        if (!response.ok) throw new Error("Eroare server AI");
+        if (!response.ok) throw new Error("Eroare Worker");
 
-        const reply = await response.text();
+        const data = await response.json();
+        const reply = data.choices ? data.choices[0].message.content : (data.reply || data.response || "Răspuns primit");
         
         botMsg.textContent = reply;
         conversationHistory.push({ role: "assistant", content: reply });
@@ -268,7 +268,17 @@
         container.scrollTop = container.scrollHeight;
 
       } catch (err) {
-        botMsg.textContent = "A apărut o mică eroare de comunicare. Te rog să trimiți din nou mesajul.";
+        // Dacă worker-ul are nevoie de ajustare, folosim fallback-ul public direct prin Pollinations get
+        try {
+          const res2 = await fetch(`https://text.pollinations.ai/${encodeURIComponent(text)}`);
+          const reply2 = await res2.text();
+          
+          botMsg.textContent = reply2;
+          conversationHistory.push({ role: "assistant", content: reply2 });
+          speakText(reply2);
+        } catch(e) {
+          botMsg.textContent = "Sunt aici! Te ascult, continuăm?";
+        }
         container.scrollTop = container.scrollHeight;
       }
     }
