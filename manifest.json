@@ -3,11 +3,11 @@
   "short_name": "Esmeralda",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#0f172a",
-  "theme_color": "#0f172a",
+  "background_color": "#0d0d0d",
+  "theme_color": "#4a154b",
   "icons": [
     {
-      "src": "1789292830725.png",
+      "src": "icon.png",
       "sizes": "512x512",
       "type": "image/png"
     }
