@@ -2,70 +2,203 @@
 <html lang="ro">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Esmeralda Secrets</title>
-    
-    <!-- Legături esențiale pentru a rula ca aplicație nativă pe tot ecranul -->
     <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#6200ea">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#4a154b">
-
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            margin: 0;
-            padding: 0;
-            background-color: #0d0d0d;
-            color: #ffffff;
-            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             display: flex;
             flex-direction: column;
             height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
         }
-        .chat-container {
+        #chat-container {
             flex: 1;
-            padding: 20px;
             overflow-y: auto;
-        }
-        .input-container {
+            padding: 16px;
             display: flex;
-            padding: 10px;
-            background-color: #1a1a1a;
-            border-top: 1px solid #333;
+            flex-direction: column;
+            gap: 12px;
         }
-        input {
-            flex: 1;
+        .message {
+            max-width: 85%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 15px;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+        .message.bot {
+            background-color: #1e1e1e;
+            color: #ffffff;
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+        }
+        .message.user {
+            background-color: #6200ea;
+            color: #ffffff;
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+        #input-container {
             padding: 12px;
-            border: none;
-            border-radius: 4px;
-            background-color: #2a2a2a;
-            color: white;
-            font-size: 16px;
+            background-color: #181818;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            border-top: 1px solid #2c2c2c;
         }
-        button {
-            padding: 12px 20px;
-            margin-left: 10px;
+        #userInput {
+            flex: 1;
+            background-color: #2c2c2c;
             border: none;
-            border-radius: 4px;
-            background-color: #4a154b;
+            border-radius: 24px;
+            padding: 12px 16px;
+            color: #ffffff;
+            font-size: 15px;
+            outline: none;
+        }
+        .action-btn {
+            background-color: #6200ea;
             color: white;
-            font-weight: bold;
+            border: none;
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
             cursor: pointer;
+            flex-shrink: 0;
+            transition: background-color 0.2s;
+        }
+        .action-btn:active {
+            background-color: #3700b3;
+        }
+        #micBtn.listening {
+            background-color: #d32f2f;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+            100% { transform: scale(1); }
         }
     </style>
 </head>
 <body>
 
-    <div class="chat-container">
-        <div style="background: #2a2a2a; padding: 15px; border-radius: 8px; margin-bottom: 10px;">
-            Sistem Independent • Online. Salut! Cu ce te pot ajuta astăzi?
-        </div>
+    <div id="chat-container">
+        <div class="message bot">Sistem independent - Online. Salut! Cu ce te pot ajuta astăzi?</div>
     </div>
 
-    <div class="input-container">
-        <input type="text" placeholder="Scrie mesajul tău...">
-        <button>Trimite</button>
+    <div id="input-container">
+        <input type="text" id="userInput" placeholder="Scrie un mesaj sau folosește microfonul..." autocomplete="off">
+        <button id="micBtn" class="action-btn" title="Vorbește">🎤</button>
+        <button id="sendBtn" class="action-btn" title="Trimite">➤</button>
     </div>
 
+    <script>
+        const chatContainer = document.getElementById('chat-container');
+        const userInput = document.getElementById('userInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const micBtn = document.getElementById('micBtn');
+
+        // URL-ul Cloudflare Worker-ului tău (înlocuiește sau asigură-te că apelează endpoint-ul corect dacă e cazul, ori lasă-l pe cel existent)
+        // Dacă folosești scriptul care comunică direct cu workerul tău, ajustează linia de fetch mai jos.
+        const WORKER_URL = 'https://nameless-block-036e.petrecezar06.workers.dev'; // Schimbă cu URL-ul tău exact dacă difere
+
+        function appendMessage(text, sender) {
+            const msgDiv = document.createElement('div');
+            msgDiv.classList.add('message', sender);
+            msgDiv.textContent = text;
+            chatContainer.appendChild(msgDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        async function handleSendMessage() {
+            const text = userInput.value.trim();
+            if (!text) return;
+
+            appendMessage(text, 'user');
+            userInput.value = '';
+
+            try {
+                // Trimitem cererea către Worker-ul tău
+                const response = await fetch(WORKER_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Eroare de rețea sau răspuns invalid de la server.');
+                }
+
+                const data = await response.json();
+                // Adaptează în funcție de cum returnează workerul tău răspunsul (ex: data.reply sau data.choices[0]...)
+                const replyText = data.reply || data.response || "Am primit mesajul!";
+                appendMessage(replyText, 'bot');
+
+            } catch (error) {
+                console.error("Eroare:", error);
+                appendMessage("A apărut o problemă de conexiune cu serverul. Încearcă din nou.", 'bot');
+            }
+        }
+
+        sendBtn.addEventListener('click', handleSendMessage);
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleSendMessage();
+        });
+
+        // Configurare Microfon (Speech Recognition)
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRecognition) {
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'ro-RO';
+            recognition.continuous = false;
+            recognition.interimResults = false;
+
+            micBtn.addEventListener('click', () => {
+                try {
+                    recognition.start();
+                } catch (e) {
+                    console.error("Microfonul este deja pornit sau blocat:", e);
+                }
+            });
+
+            recognition.onstart = () => {
+                micBtn.classList.add('listening');
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                userInput.value = transcript;
+                micBtn.classList.remove('listening');
+                handleSendMessage(); // Trimite automat mesajul dictat (opțional, poți scoate linia dacă vrei doar să-l pui în input)
+            };
+
+            recognition.onerror = (event) => {
+                console.error("Eroare microfon:", event.error);
+                micBtn.classList.remove('listening');
+            };
+
+            recognition.onend = () => {
+                micBtn.classList.remove('listening');
+            };
+        } else {
+            micBtn.style.display = 'none'; // Ascunde butonul dacă browserul nu suportă
+        }
+    </script>
 </body>
 </html>
