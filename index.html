@@ -184,7 +184,10 @@
 
         const data = await response.json();
         
-        if (data.reply) {
+        // Am actualizat aici ca să citească corect 'response' sau 'reply' sau 'error'
+        if (data.response) {
+          botMsg.textContent = data.response;
+        } else if (data.reply) {
           botMsg.textContent = data.reply;
         } else if (data.error) {
           botMsg.textContent = "Eroare: " + data.error;
