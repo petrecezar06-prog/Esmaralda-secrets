@@ -157,7 +157,6 @@
 
       if (!text) return;
 
-      // Afișează mesajul utilizatorului în chat
       const userMsg = document.createElement('div');
       userMsg.className = 'message user';
       userMsg.textContent = text;
@@ -166,7 +165,6 @@
       input.value = '';
       container.scrollTop = container.scrollHeight;
 
-      // Mesaj de încărcare în timp ce procesează serverul
       const botMsg = document.createElement('div');
       botMsg.className = 'message bot';
       botMsg.textContent = "Esmeralda gândește...";
@@ -174,8 +172,7 @@
       container.scrollTop = container.scrollHeight;
 
       try {
-        // !!! SCHIMBĂ LINKUL DE MAI JOS CU URL-UL TĂU REAL DE LA CLOUDFLARE WORKER !!!
-        const workerUrl = 'https://AICI_PUI_LINKUL_TAU_DE_LA_WORKER.workers.dev';
+        const workerUrl = 'https://nameless-block-036e.petre-cezar06.workers.dev';
 
         const response = await fetch(workerUrl, {
           method: 'POST',
