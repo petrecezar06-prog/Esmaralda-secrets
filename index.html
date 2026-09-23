@@ -157,6 +157,7 @@
 
       if (!text) return;
 
+      // Afișează mesajul utilizatorului în chat
       const userMsg = document.createElement('div');
       userMsg.className = 'message user';
       userMsg.textContent = text;
@@ -165,30 +166,40 @@
       input.value = '';
       container.scrollTop = container.scrollHeight;
 
+      // Mesaj de încărcare în timp ce procesează serverul
       const botMsg = document.createElement('div');
       botMsg.className = 'message bot';
-      botMsg.textContent = "Esmeralda procesează...";
+      botMsg.textContent = "Esmeralda gândește...";
       container.appendChild(botMsg);
       container.scrollTop = container.scrollHeight;
 
-      // Răspuns inteligent generat local pentru a evita orice blocaj de server extern
-      setTimeout(() => {
-        let reply = "";
-        const lower = text.toLowerCase();
+      try {
+        // !!! SCHIMBĂ LINKUL DE MAI JOS CU URL-UL TĂU REAL DE LA CLOUDFLARE WORKER !!!
+        const workerUrl = 'https://AICI_PUI_LINKUL_TAU_DE_LA_WORKER.workers.dev';
 
-        if (lower.includes('durere') || lower.includes('cap')) {
-          reply = "Pentru durerile de cap, recomandările generale includ hidtratarea corespunzătoare, repausul într-o cameră întunecată și liniștită, aplicarea unei comprese reci pe frunte sau utilizarea de antiinflamatoare ușoare, dacă nu există contraindicații medicale.";
-        } else if (lower.includes('ceas') || lower.includes('ora')) {
-          reply = "Ora locală curentă este " + new Date().toLocaleTimeString('ro-RO') + ".";
-        } else if (lower.includes('zi')) {
-          reply = "Astăzi este marți, 15 septembrie 2026.";
+        const response = await fetch(workerUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ message: text })
+        });
+
+        const data = await response.json();
+        
+        if (data.reply) {
+          botMsg.textContent = data.reply;
+        } else if (data.error) {
+          botMsg.textContent = "Eroare: " + data.error;
         } else {
-          reply = `Am analizat cererea ta: "${text}". Sunt pregătită să extindem această logică și să o transformăm într-un sistem complet independent pentru proiectul tău!`;
+          botMsg.textContent = "Răspuns nevalid de la server.";
         }
 
-        botMsg.textContent = reply;
-        container.scrollTop = container.scrollHeight;
-      }, 600);
+      } catch (error) {
+        botMsg.textContent = "Eroare de conexiune cu Cloudflare Worker.";
+      }
+
+      container.scrollTop = container.scrollHeight;
     }
 
     document.getElementById('userInput').addEventListener('keypress', function(e) {
