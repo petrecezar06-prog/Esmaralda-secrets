@@ -4,11 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Esmeralda Secrets</title>
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#6200ea">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -47,7 +42,7 @@
             background-color: #6200ea;
             color: #ffffff;
             align-self: flex-end;
-            border-bottom-right-radius: 2px;
+            border-right-radius: 2px;
         }
         #input-container {
             padding: 12px;
@@ -80,19 +75,9 @@
             font-size: 18px;
             cursor: pointer;
             flex-shrink: 0;
-            transition: background-color 0.2s;
-        }
-        .action-btn:active {
-            background-color: #3700b3;
         }
         #micBtn.listening {
             background-color: #d32f2f;
-            animation: pulse 1.5s infinite;
-        }
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.08); }
-            100% { transform: scale(1); }
         }
     </style>
 </head>
@@ -103,9 +88,9 @@
     </div>
 
     <div id="input-container">
-        <input type="text" id="userInput" placeholder="Scrie un mesaj sau folosește microfonul..." autocomplete="off">
-        <button id="micBtn" class="action-btn" title="Vorbește">🎤</button>
-        <button id="sendBtn" class="action-btn" title="Trimite">➤</button>
+        <input type="text" id="userInput" placeholder="Scrie un mesaj..." autocomplete="off">
+        <button id="micBtn" class="action-btn">🎤</button>
+        <button id="sendBtn" class="action-btn">➤</button>
     </div>
 
     <script>
@@ -138,12 +123,8 @@
                     body: JSON.stringify({ message: text })
                 });
 
-                if (!response.ok) {
-                    throw new Error('Eroare de rețea.');
-                }
-
                 const data = await response.json();
-                const replyText = data.reply || "Am primit mesajul!";
+                const replyText = data.reply || "Răspuns primit!";
                 appendMessage(replyText, 'bot');
 
             } catch (error) {
@@ -161,26 +142,13 @@
         if (SpeechRecognition) {
             const recognition = new SpeechRecognition();
             recognition.lang = 'ro-RO';
-            recognition.continuous = false;
-            recognition.interimResults = false;
-
             micBtn.addEventListener('click', () => {
-                try {
-                    recognition.start();
-                } catch (e) {
-                    console.error(e);
-                }
+                try { recognition.start(); } catch (e) {}
             });
-
-            recognition.onstart = () => { micBtn.classList.add('listening'); };
             recognition.onresult = (event) => {
-                const transcript = event.results[0][0].transcript;
-                userInput.value = transcript;
-                micBtn.classList.remove('listening');
+                userInput.value = event.results[0][0].transcript;
                 handleSendMessage();
             };
-            recognition.onerror = () => { micBtn.classList.remove('listening'); };
-            recognition.onend = () => { micBtn.classList.remove('listening'); };
         } else {
             micBtn.style.display = 'none';
         }
