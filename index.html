@@ -2,155 +2,34 @@
 <html lang="ro">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Esmeralda Secrets</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Esmeralda</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            background-color: #121212;
-            color: #e0e0e0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            height: 100dvh;
-            overflow: hidden;
-        }
-        #chat-container {
-            flex: 1;
-            overflow-y: auto;
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        .message {
-            max-width: 85%;
-            padding: 12px 16px;
-            border-radius: 12px;
-            font-size: 15px;
-            line-height: 1.4;
-            word-wrap: break-word;
-        }
-        .message.bot {
-            background-color: #1e1e1e;
-            color: #ffffff;
-            align-self: flex-start;
-            border-bottom-left-radius: 2px;
-        }
-        .message.user {
-            background-color: #6200ea;
-            color: #ffffff;
-            align-self: flex-end;
-            border-right-radius: 2px;
-        }
-        #input-container {
-            padding: 12px;
-            background-color: #181818;
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            border-top: 1px solid #2c2c2c;
-        }
-        #userInput {
-            flex: 1;
-            background-color: #2c2c2c;
-            border: none;
-            border-radius: 24px;
-            padding: 12px 16px;
-            color: #ffffff;
-            font-size: 15px;
-            outline: none;
-        }
-        .action-btn {
-            background-color: #6200ea;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 44px;
-            height: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            cursor: pointer;
-            flex-shrink: 0;
-        }
-        #micBtn.listening {
-            background-color: #d32f2f;
-        }
+        body { background: #121212; color: #fff; font-family: sans-serif; padding: 20px; }
+        input, button { padding: 10px; font-size: 16px; margin-top: 10px; width: 100%; }
+        #output { margin-top: 20px; background: #222; padding: 15px; border-radius: 8px; }
     </style>
 </head>
 <body>
-
-    <div id="chat-container">
-        <div class="message bot">Sistem independent - Online. Salut! Cu ce te pot ajuta astăzi?</div>
-    </div>
-
-    <div id="input-container">
-        <input type="text" id="userInput" placeholder="Scrie un mesaj..." autocomplete="off">
-        <button id="micBtn" class="action-btn">🎤</button>
-        <button id="sendBtn" class="action-btn">➤</button>
-    </div>
+    <h2>Test Conexiune Worker</h2>
+    <input type="text" id="txt" placeholder="Scrie ceva...">
+    <button onclick="testServer()">Trimite la Server</button>
+    <div id="output">Răspunsul va apărea aici...</div>
 
     <script>
-        const chatContainer = document.getElementById('chat-container');
-        const userInput = document.getElementById('userInput');
-        const sendBtn = document.getElementById('sendBtn');
-        const micBtn = document.getElementById('micBtn');
-
-        const WORKER_URL = 'https://nameless-block-036e.petrecezar06.workers.dev';
-
-        function appendMessage(text, sender) {
-            const msgDiv = document.createElement('div');
-            msgDiv.classList.add('message', sender);
-            msgDiv.textContent = text;
-            chatContainer.appendChild(msgDiv);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
-
-        async function handleSendMessage() {
-            const text = userInput.value.trim();
-            if (!text) return;
-
-            appendMessage(text, 'user');
-            userInput.value = '';
-
+        async function testServer() {
+            const val = document.getElementById('txt').value;
+            const out = document.getElementById('output');
+            out.textContent = "Se trimite...";
+            
             try {
-                const response = await fetch(WORKER_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: text })
-                });
-
-                const data = await response.json();
-                const replyText = data.reply || "Răspuns primit!";
-                appendMessage(replyText, 'bot');
-
-            } catch (error) {
-                console.error("Eroare:", error);
-                appendMessage("A apărut o problemă de conexiune cu serverul. Încearcă din nou.", 'bot');
+                // Folosim Workerul tău direct
+                const res = await fetch('https://nameless-block-036e.petrecezar06.workers.dev?msg=' + encodeURIComponent(val));
+                const data = await res.json();
+                out.textContent = "Răspuns: " + JSON.stringify(data);
+            } catch (err) {
+                out.textContent = "Eroare fetch: " + err.message;
             }
-        }
-
-        sendBtn.addEventListener('click', handleSendMessage);
-        userInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') handleSendMessage();
-        });
-
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (SpeechRecognition) {
-            const recognition = new SpeechRecognition();
-            recognition.lang = 'ro-RO';
-            micBtn.addEventListener('click', () => {
-                try { recognition.start(); } catch (e) {}
-            });
-            recognition.onresult = (event) => {
-                userInput.value = event.results[0][0].transcript;
-                handleSendMessage();
-            };
-        } else {
-            micBtn.style.display = 'none';
         }
     </script>
 </body>
