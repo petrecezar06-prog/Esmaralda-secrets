@@ -139,11 +139,11 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error('Eroare de rețea sau răspuns invalid de la server.');
+                    throw new Error('Eroare de rețea.');
                 }
 
                 const data = await response.json();
-                const replyText = data.reply || data.response || "Am primit mesajul!";
+                const replyText = data.reply || "Am primit mesajul!";
                 appendMessage(replyText, 'bot');
 
             } catch (error) {
@@ -168,7 +168,7 @@
                 try {
                     recognition.start();
                 } catch (e) {
-                    console.error("Microfonul este deja pornit sau blocat:", e);
+                    console.error(e);
                 }
             });
 
