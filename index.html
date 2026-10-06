@@ -32,16 +32,10 @@
             padding: 14px 20px;
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            gap: 14px;
             border-bottom: 1px solid rgba(139, 38, 143, 0.25);
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
             z-index: 10;
-        }
-
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 14px;
         }
 
         .avatar {
@@ -84,102 +78,6 @@
             background-color: #10b981;
             border-radius: 50%;
             box-shadow: 0 0 8px #10b981;
-        }
-
-        .settings-btn {
-            background: transparent;
-            border: none;
-            color: #a78bfa;
-            cursor: pointer;
-            padding: 8px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background-color 0.2s;
-        }
-
-        .settings-btn:hover {
-            background-color: rgba(139, 38, 143, 0.2);
-        }
-
-        .settings-btn svg {
-            width: 22px;
-            height: 22px;
-            fill: currentColor;
-        }
-
-        /* Settings Modal */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.75);
-            backdrop-filter: blur(4px);
-            z-index: 100;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .modal-card {
-            background: #190c2e;
-            border: 1px solid rgba(139, 38, 143, 0.4);
-            border-radius: 16px;
-            padding: 20px;
-            width: 100%;
-            max-width: 440px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-        }
-
-        .modal-title {
-            font-size: 1.1rem;
-            font-weight: bold;
-            color: #fff;
-        }
-
-        .modal-label {
-            font-size: 0.85rem;
-            color: #cbd5e1;
-        }
-
-        .modal-input {
-            width: 100%;
-            padding: 10px 14px;
-            border-radius: 8px;
-            border: 1px solid rgba(139, 38, 143, 0.4);
-            background: #0f071d;
-            color: #fff;
-            font-size: 0.9rem;
-            outline: none;
-        }
-
-        .modal-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .btn-secondary {
-            background: #334155;
-            color: #fff;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-
-        .btn-primary {
-            background: #8b268f;
-            color: #fff;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 8px;
-            cursor: pointer;
         }
 
         /* Chat Container */
@@ -330,18 +228,11 @@
 <body>
 
     <header>
-        <div class="header-left">
-            <img src="icon.png" alt="Esmeralda" class="avatar" onerror="this.outerHTML='<div class=\'avatar\'>🔮</div>'">
-            <div class="header-info">
-                <span class="header-title">Esmeralda Secrets</span>
-                <span class="header-status"><span class="status-dot"></span> Online</span>
-            </div>
+        <img src="icon.png" alt="Esmeralda" class="avatar" onerror="this.outerHTML='<div class=\'avatar\'>🔮</div>'">
+        <div class="header-info">
+            <span class="header-title">Esmeralda Secrets</span>
+            <span class="header-status"><span class="status-dot"></span> Online</span>
         </div>
-        <button class="settings-btn" id="openSettingsBtn" onclick="toggleSettings(true)" title="Setări Worker URL">
-            <svg viewBox="0 0 24 24">
-                <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6-3.6z"/>
-            </svg>
-        </button>
     </header>
 
     <div id="chat-container">
@@ -366,123 +257,17 @@
         </button>
     </footer>
 
-    <!-- Settings Modal -->
-    <div class="modal-overlay" id="settingsModal">
-        <div class="modal-card">
-            <div class="modal-title">Setări Adresă Worker</div>
-            <div class="modal-label">Adresă Cloudflare Worker (.workers.dev):</div>
-            <input type="text" id="customWorkerUrl" class="modal-input" placeholder="https://nameless-block-036e.petrecezar06.workers.dev">
-            <div class="modal-actions">
-                <button class="btn-secondary" onclick="toggleSettings(false)">Anulează</button>
-                <button class="btn-primary" onclick="saveWorkerUrl()">Salvează</button>
-            </div>
-        </div>
-    </div>
-
     <script>
-        // Exact Cloudflare Worker primary URL
-        const PRIMARY_WORKER_URL = 'https://nameless-block-036e.petrecezar06.workers.dev';
-
-        // Default candidate Worker backend URLs
-        const DEFAULT_ENDPOINTS = [
-            PRIMARY_WORKER_URL,
-            'https://nameless-block-036e.workers.dev'
-        ];
-
+        const WORKER_URL = 'https://nameless-block-036e.petrecezar06.workers.dev';
         const chatContainer = document.getElementById('chat-container');
         const userInput = document.getElementById('userInput');
         const typingIndicator = document.getElementById('typing');
-        const settingsModal = document.getElementById('settingsModal');
-        const customWorkerInput = document.getElementById('customWorkerUrl');
-
-        // Load saved custom URL if exists
-        const savedUrl = localStorage.getItem('esmeralda_worker_url');
-        if (savedUrl) {
-            customWorkerInput.value = savedUrl;
-        } else {
-            customWorkerInput.value = PRIMARY_WORKER_URL;
-        }
-
-        function toggleSettings(show) {
-            settingsModal.style.display = show ? 'flex' : 'none';
-        }
-
-        function saveWorkerUrl() {
-            const url = customWorkerInput.value.trim();
-            if (url) {
-                localStorage.setItem('esmeralda_worker_url', url);
-            } else {
-                localStorage.removeItem('esmeralda_worker_url');
-            }
-            toggleSettings(false);
-            appendMessage('Setări salvate! Adresă configurată: ' + (url || PRIMARY_WORKER_URL), 'bot');
-        }
 
         userInput.addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
                 sendMessage();
             }
         });
-
-        async function fetchFromWorker(text) {
-            let endpointsToTry = [];
-
-            const userConfiguredUrl = localStorage.getItem('esmeralda_worker_url') || customWorkerInput.value.trim();
-            if (userConfiguredUrl) {
-                endpointsToTry.push(userConfiguredUrl.replace(/\/$/, ''));
-            }
-
-            DEFAULT_ENDPOINTS.forEach(ep => {
-                const cleanEp = ep.replace(/\/$/, '');
-                if (!endpointsToTry.includes(cleanEp)) {
-                    endpointsToTry.push(cleanEp);
-                }
-            });
-
-            let errors = [];
-
-            for (const endpoint of endpointsToTry) {
-                // Try POST request
-                try {
-                    const res = await fetch(endpoint, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ message: text })
-                    });
-                    if (res.ok) {
-                        const data = await res.json();
-                        if (data && (data.response || data.reply || data.message)) {
-                            return data.response || data.reply || data.message;
-                        }
-                    } else {
-                        errors.push(`[${endpoint}] HTTP ${res.status}`);
-                    }
-                } catch (err) {
-                    errors.push(`[${endpoint} POST] ${err.message}`);
-                    console.warn(`POST request to ${endpoint} failed:`, err);
-                }
-
-                // Try GET request fallback
-                try {
-                    const getRes = await fetch(endpoint + '?msg=' + encodeURIComponent(text));
-                    if (getRes.ok) {
-                        const data = await getRes.json();
-                        if (data && (data.response || data.reply || data.message)) {
-                            return data.response || data.reply || data.message;
-                        }
-                    } else {
-                        errors.push(`[${endpoint}] HTTP ${getRes.status}`);
-                    }
-                } catch (err) {
-                    errors.push(`[${endpoint} GET] ${err.message}`);
-                    console.warn(`GET request to ${endpoint} failed:`, err);
-                }
-            }
-
-            throw new Error(errors.join(' | ') || 'Eroare conexiune Worker.');
-        }
 
         async function sendMessage() {
             const text = userInput.value.trim();
@@ -493,17 +278,47 @@
             showTyping(true);
 
             try {
-                const responseText = await fetchFromWorker(text);
+                let responseText = '';
+
+                // Try POST request
+                try {
+                    const res = await fetch(WORKER_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ message: text })
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        responseText = data.response || data.reply || data.message;
+                    }
+                } catch (postErr) {
+                    console.warn('POST failed, attempting GET fallback:', postErr);
+                }
+
+                // Try GET request fallback
+                if (!responseText) {
+                    const getRes = await fetch(WORKER_URL + '?msg=' + encodeURIComponent(text));
+                    if (getRes.ok) {
+                        const data = await getRes.json();
+                        responseText = data.response || data.reply || data.message;
+                    } else {
+                        throw new Error('HTTP ' + getRes.status);
+                    }
+                }
+
                 showTyping(false);
                 if (responseText) {
                     appendMessage(responseText, 'bot');
                 } else {
                     appendMessage('Nu am putut obține un răspuns valid de la server.', 'system-error');
                 }
+
             } catch (err) {
                 showTyping(false);
                 console.error('Fetch error:', err);
-                appendMessage('Eroare conexiune: ' + err.message + '. Apasă pe pictograma de Setări (⚙️) din colțul dreapta sus pentru a verifica sau modifica adresa Worker-ului.', 'system-error');
+                appendMessage('Eroare conexiune (' + err.message + '). Verifică conexiunea la internet și că Worker-ul este activ la ' + WORKER_URL, 'system-error');
             }
         }
 
