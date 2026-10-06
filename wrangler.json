@@ -1,0 +1,9 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "nameless-block-036e",
+  "main": "worker.js",
+  "compatibility_date": "2024-03-01",
+  "observability": {
+    "enabled": true
+  }
+}
