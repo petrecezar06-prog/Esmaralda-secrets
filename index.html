@@ -2,34 +2,348 @@
 <html lang="ro">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test Esmeralda</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Esmeralda Secrets</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="icon.png">
+    <meta name="theme-color" content="#12081d">
     <style>
-        body { background: #121212; color: #fff; font-family: sans-serif; padding: 20px; }
-        input, button { padding: 10px; font-size: 16px; margin-top: 10px; width: 100%; }
-        #output { margin-top: 20px; background: #222; padding: 15px; border-radius: 8px; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: #0d0614;
+            color: #f1f1f7;
+            height: 100vh;
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, #1b0c2e, #2a1040);
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            border-bottom: 1px solid rgba(139, 38, 143, 0.25);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            z-index: 10;
+        }
+
+        .avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #8b268f;
+            box-shadow: 0 0 10px rgba(139, 38, 143, 0.5);
+            background: #2a1040;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .header-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: 0.5px;
+        }
+
+        .header-status {
+            font-size: 0.8rem;
+            color: #10b981;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #10b981;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #10b981;
+        }
+
+        /* Chat Container */
+        #chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            scroll-behavior: smooth;
+        }
+
+        .message {
+            max-width: 85%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 0.95rem;
+            line-height: 1.45;
+            word-wrap: break-word;
+            animation: fadeIn 0.25s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.bot {
+            align-self: flex-start;
+            background-color: #1f1230;
+            color: #e2d9ee;
+            border-bottom-left-radius: 4px;
+            border: 1px solid rgba(139, 38, 143, 0.2);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .message.user {
+            align-self: flex-end;
+            background: linear-gradient(135deg, #6b1b70, #4a154b);
+            color: #ffffff;
+            border-bottom-right-radius: 4px;
+            box-shadow: 0 2px 10px rgba(107, 27, 112, 0.3);
+        }
+
+        .message.system-error {
+            align-self: center;
+            background-color: rgba(220, 38, 38, 0.15);
+            color: #f87171;
+            border: 1px solid rgba(220, 38, 38, 0.3);
+            font-size: 0.85rem;
+            text-align: center;
+            max-width: 90%;
+            border-radius: 12px;
+        }
+
+        /* Typing indicator */
+        .typing-indicator {
+            align-self: flex-start;
+            background-color: #1f1230;
+            padding: 12px 18px;
+            border-radius: 18px;
+            border-bottom-left-radius: 4px;
+            display: none;
+            gap: 5px;
+            align-items: center;
+            border: 1px solid rgba(139, 38, 143, 0.2);
+        }
+
+        .typing-indicator span {
+            width: 7px;
+            height: 7px;
+            background-color: #8b268f;
+            border-radius: 50%;
+            animation: bounce 1.3s infinite ease-in-out;
+        }
+
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); opacity: 0.4; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Input Area */
+        footer {
+            padding: 12px 16px;
+            background-color: #140924;
+            border-top: 1px solid rgba(139, 38, 143, 0.2);
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .input-wrapper {
+            flex: 1;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 24px;
+            border: 1px solid rgba(139, 38, 143, 0.3);
+            background-color: #1d0e33;
+            color: #ffffff;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus {
+            border-color: #8b268f;
+            box-shadow: 0 0 8px rgba(139, 38, 143, 0.4);
+        }
+
+        button.send-btn {
+            background: linear-gradient(135deg, #8b268f, #4a154b);
+            border: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.15s, background-color 0.2s;
+            box-shadow: 0 2px 10px rgba(139, 38, 143, 0.4);
+            flex-shrink: 0;
+        }
+
+        button.send-btn:active {
+            transform: scale(0.92);
+        }
+
+        button.send-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+            margin-left: 2px;
+        }
     </style>
 </head>
 <body>
-    <h2>Test Conexiune Worker</h2>
-    <input type="text" id="txt" placeholder="Scrie ceva...">
-    <button onclick="testServer()">Trimite la Server</button>
-    <div id="output">Răspunsul va apărea aici...</div>
+
+    <header>
+        <img src="icon.png" alt="Esmeralda" class="avatar" onerror="this.outerHTML='<div class=\'avatar\'>🔮</div>'">
+        <div class="header-info">
+            <span class="header-title">Esmeralda Secrets</span>
+            <span class="header-status"><span class="status-dot"></span> Online</span>
+        </div>
+    </header>
+
+    <div id="chat-container">
+        <div class="message bot">
+            Salut! Sunt <strong>Esmeralda</strong>, inteligenta ta personală. Cu ce te pot ajuta astăzi?
+        </div>
+        <div class="typing-indicator" id="typing">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </div>
+
+    <footer>
+        <div class="input-wrapper">
+            <input type="text" id="userInput" placeholder="Scrie un mesaj..." autocomplete="off">
+        </div>
+        <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+            <svg viewBox="0 0 24 24">
+                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+            </svg>
+        </button>
+    </footer>
 
     <script>
-        async function testServer() {
-            const val = document.getElementById('txt').value;
-            const out = document.getElementById('output');
-            out.textContent = "Se trimite...";
-            
-            try {
-                // Folosim Workerul tău direct
-                const res = await fetch('https://nameless-block-036e.petrecezar06.workers.dev?msg=' + encodeURIComponent(val));
-                const data = await res.json();
-                out.textContent = "Răspuns: " + JSON.stringify(data);
-            } catch (err) {
-                out.textContent = "Eroare fetch: " + err.message;
+        const WORKER_URL = 'https://nameless-block-036e.petrecezar06.workers.dev';
+        const chatContainer = document.getElementById('chat-container');
+        const userInput = document.getElementById('userInput');
+        const typingIndicator = document.getElementById('typing');
+        const sendBtn = document.getElementById('sendBtn');
+
+        userInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
             }
+        });
+
+        async function sendMessage() {
+            const text = userInput.value.trim();
+            if (!text) return;
+
+            // Display user message
+            appendMessage(text, 'user');
+            userInput.value = '';
+            showTyping(true);
+
+            try {
+                let responseText = '';
+
+                // Primary attempt: POST request
+                try {
+                    const res = await fetch(WORKER_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ message: text })
+                    });
+
+                    if (res.ok) {
+                        const data = await res.json();
+                        responseText = data.response || data.reply || data.message;
+                    }
+                } catch (postErr) {
+                    console.warn('POST failed, attempting GET fallback:', postErr);
+                }
+
+                // Fallback attempt: GET request if POST was not successful
+                if (!responseText) {
+                    const getRes = await fetch(WORKER_URL + '?msg=' + encodeURIComponent(text));
+                    if (getRes.ok) {
+                        const data = await getRes.json();
+                        responseText = data.response || data.reply || data.message;
+                    } else {
+                        throw new Error('Serverul a răspuns cu status ' + getRes.status);
+                    }
+                }
+
+                showTyping(false);
+                if (responseText) {
+                    appendMessage(responseText, 'bot');
+                } else {
+                    appendMessage('Nu am putut obține un răspuns valid de la server.', 'system-error');
+                }
+
+            } catch (err) {
+                showTyping(false);
+                console.error('Fetch error:', err);
+                appendMessage('Eroare conexiune ("' + err.message + '"). Verifică conexiunea la internet și configurația serverului CORS.', 'system-error');
+            }
+        }
+
+        function appendMessage(text, type) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'message ' + type;
+            msgDiv.textContent = text;
+
+            chatContainer.insertBefore(msgDiv, typingIndicator);
+            scrollToBottom();
+        }
+
+        function showTyping(show) {
+            typingIndicator.style.display = show ? 'flex' : 'none';
+            if (show) {
+                chatContainer.appendChild(typingIndicator);
+                scrollToBottom();
+            }
+        }
+
+        function scrollToBottom() {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
         }
     </script>
 </body>
