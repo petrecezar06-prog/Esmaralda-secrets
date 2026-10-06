@@ -258,11 +258,15 @@
     </footer>
 
     <script>
-        const WORKER_URL = 'https://nameless-block-036e.petrecezar06.workers.dev';
+        // List of candidate Worker backend URLs to attempt
+        const WORKER_ENDPOINTS = [
+            'https://nameless-block-036e.petrecezar06.workers.dev',
+            'https://nameless-block-036e.workers.dev'
+        ];
+
         const chatContainer = document.getElementById('chat-container');
         const userInput = document.getElementById('userInput');
         const typingIndicator = document.getElementById('typing');
-        const sendBtn = document.getElementById('sendBtn');
 
         userInput.addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
@@ -270,54 +274,64 @@
             }
         });
 
-        async function sendMessage() {
-            const text = userInput.value.trim();
-            if (!text) return;
+        async function fetchFromWorker(text) {
+            let lastErr = null;
 
-            // Display user message
-            appendMessage(text, 'user');
-            userInput.value = '';
-            showTyping(true);
-
-            try {
-                let responseText = '';
-
-                // Primary attempt: POST request
+            for (const endpoint of WORKER_ENDPOINTS) {
+                // Try POST request
                 try {
-                    const res = await fetch(WORKER_URL, {
+                    const res = await fetch(endpoint, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({ message: text })
                     });
-
                     if (res.ok) {
                         const data = await res.json();
-                        responseText = data.response || data.reply || data.message;
+                        if (data && (data.response || data.reply || data.message)) {
+                            return data.response || data.reply || data.message;
+                        }
                     }
-                } catch (postErr) {
-                    console.warn('POST failed, attempting GET fallback:', postErr);
+                } catch (err) {
+                    lastErr = err;
+                    console.warn(`POST request to ${endpoint} failed:`, err);
                 }
 
-                // Fallback attempt: GET request if POST was not successful
-                if (!responseText) {
-                    const getRes = await fetch(WORKER_URL + '?msg=' + encodeURIComponent(text));
+                // Try GET request fallback
+                try {
+                    const getRes = await fetch(endpoint + '?msg=' + encodeURIComponent(text));
                     if (getRes.ok) {
                         const data = await getRes.json();
-                        responseText = data.response || data.reply || data.message;
-                    } else {
-                        throw new Error('Serverul a răspuns cu status ' + getRes.status);
+                        if (data && (data.response || data.reply || data.message)) {
+                            return data.response || data.reply || data.message;
+                        }
                     }
+                } catch (err) {
+                    lastErr = err;
+                    console.warn(`GET request to ${endpoint} failed:`, err);
                 }
+            }
 
+            throw lastErr || new Error('Eroare conexiune Worker.');
+        }
+
+        async function sendMessage() {
+            const text = userInput.value.trim();
+            if (!text) return;
+
+            appendMessage(text, 'user');
+            userInput.value = '';
+            showTyping(true);
+
+            try {
+                const responseText = await fetchFromWorker(text);
                 showTyping(false);
                 if (responseText) {
                     appendMessage(responseText, 'bot');
                 } else {
                     appendMessage('Nu am putut obține un răspuns valid de la server.', 'system-error');
                 }
-
             } catch (err) {
                 showTyping(false);
                 console.error('Fetch error:', err);
