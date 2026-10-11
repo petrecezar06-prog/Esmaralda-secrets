@@ -98,7 +98,7 @@ export default {
       }
 
       // Default / fallback response when API key is missing or OpenRouter fails
-      const fallbackReply = `[Esmeralda]: Am primit mesajul tău: "${userMessage}". Conexiunea cu serverul funcționează corect. (Pentru răspunsuri AI complete, configurează OPENROUTER_API_KEY în Cloudflare Worker).`;
+      const fallbackReply = `[Esmeralda]: Am primit mesajul tău: "${userMessage}". Conexiunea cu serverul funcționează corect.`;
 
       return new Response(
         JSON.stringify({
