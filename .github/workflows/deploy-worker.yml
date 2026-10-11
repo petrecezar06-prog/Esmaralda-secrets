@@ -1,0 +1,32 @@
+# GitHub Actions Workflow for automated Cloudflare Worker deployment
+#
+# GitHub Secrets configuration required in Repository Settings -> Secrets and variables -> Actions:
+# 1. CLOUDFLARE_API_TOKEN: Cloudflare API token with 'Edit Cloudflare Workers' permissions.
+# 2. CLOUDFLARE_ACCOUNT_ID: Cloudflare Account ID for worker 'nameless-block-036e'.
+# 3. OPENROUTER_API_KEY: (Optional) OpenRouter API key to be passed to the worker secrets during deployment.
+
+name: Deploy Cloudflare Worker
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy Cloudflare Worker
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Deploy Worker via Wrangler
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          secrets: |
+            OPENROUTER_API_KEY
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
