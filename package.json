@@ -1,0 +1,14 @@
+{
+  "name": "esmeralda-secrets",
+  "version": "1.0.0",
+  "description": "Esmeralda Secrets - AI Assistant Cloudflare Worker and PWA frontend",
+  "main": "worker.js",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev",
+    "test": "node --check worker.js"
+  },
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}

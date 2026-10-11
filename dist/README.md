@@ -1,0 +1,1 @@
+This folder contains the built output assets for the worker "nameless-block-036e" generated at 2026-10-11T06:41:16.996Z.

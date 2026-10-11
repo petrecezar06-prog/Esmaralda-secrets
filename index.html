@@ -258,11 +258,18 @@
     </footer>
 
     <script>
-        // List of candidate Worker backend URLs to attempt
-        const WORKER_ENDPOINTS = [
+        // List of candidate Worker backend URLs in order of preference
+        const WORKER_ENDPOINTS = [];
+
+        // Include local endpoint if developing locally or running automated verification
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:') {
+            WORKER_ENDPOINTS.push('http://localhost:8787');
+        }
+
+        WORKER_ENDPOINTS.push(
             'https://nameless-block-036e.petrecezar06.workers.dev',
             'https://nameless-block-036e.workers.dev'
-        ];
+        );
 
         const chatContainer = document.getElementById('chat-container');
         const userInput = document.getElementById('userInput');
@@ -298,7 +305,7 @@
                     console.warn(`POST request to ${endpoint} failed:`, err);
                 }
 
-                // Try GET request fallback
+                // Fallback: Try GET request
                 try {
                     const getRes = await fetch(endpoint + '?msg=' + encodeURIComponent(text));
                     if (getRes.ok) {
@@ -313,7 +320,7 @@
                 }
             }
 
-            throw lastErr || new Error('Eroare conexiune Worker.');
+            throw lastErr || new Error('Nu s-a putut conecta la niciun endpoint Worker.');
         }
 
         async function sendMessage() {
