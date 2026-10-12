@@ -258,7 +258,7 @@
     </footer>
 
     <script>
-        // List of candidate Worker backend URLs to attempt
+        // List of candidate Worker backend URLs to attempt (using HTTPS protocol)
         const WORKER_ENDPOINTS = [
             'https://nameless-block-036e.petrecezar06.workers.dev',
             'https://nameless-block-036e.workers.dev'
@@ -278,9 +278,14 @@
             let lastErr = null;
 
             for (const endpoint of WORKER_ENDPOINTS) {
-                // Try POST request
+                // Ensure URL uses HTTPS protocol
+                const targetUrl = endpoint.startsWith('http://')
+                    ? endpoint.replace('http://', 'https://')
+                    : endpoint;
+
+                // 1. Try POST request
                 try {
-                    const res = await fetch(endpoint, {
+                    const res = await fetch(targetUrl, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
@@ -292,24 +297,29 @@
                         if (data && (data.response || data.reply || data.message)) {
                             return data.response || data.reply || data.message;
                         }
+                    } else {
+                        console.error(`POST request to ${targetUrl} returned HTTP status: ${res.status} ${res.statusText}`);
                     }
                 } catch (err) {
                     lastErr = err;
-                    console.warn(`POST request to ${endpoint} failed:`, err);
+                    console.error(`POST request to ${targetUrl} failed with error:`, err);
                 }
 
-                // Try GET request fallback
+                // 2. Try GET request fallback
                 try {
-                    const getRes = await fetch(endpoint + '?msg=' + encodeURIComponent(text));
+                    const getUrl = `${targetUrl}?msg=${encodeURIComponent(text)}`;
+                    const getRes = await fetch(getUrl);
                     if (getRes.ok) {
                         const data = await getRes.json();
                         if (data && (data.response || data.reply || data.message)) {
                             return data.response || data.reply || data.message;
                         }
+                    } else {
+                        console.error(`GET request to ${getUrl} returned HTTP status: ${getRes.status} ${getRes.statusText}`);
                     }
                 } catch (err) {
                     lastErr = err;
-                    console.warn(`GET request to ${endpoint} failed:`, err);
+                    console.error(`GET request to ${targetUrl} fallback failed with error:`, err);
                 }
             }
 
@@ -334,7 +344,7 @@
                 }
             } catch (err) {
                 showTyping(false);
-                console.error('Fetch error:', err);
+                console.error('Fetch error during sendMessage:', err);
                 appendMessage('Eroare conexiune ("' + err.message + '"). Verifică conexiunea la internet și configurația serverului CORS.', 'system-error');
             }
         }
