@@ -2,7 +2,7 @@
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
   "Access-Control-Max-Age": "86400",
 };
 
@@ -18,10 +18,10 @@ function createJsonResponse(data, status = 200) {
 
 export default {
   async fetch(request, env, ctx) {
-    // Handle OPTIONS preflight requests globally with 204 No Content
+    // Handle OPTIONS preflight requests globally with 200 OK
     if (request.method === "OPTIONS") {
       return new Response(null, {
-        status: 204,
+        status: 200,
         headers: CORS_HEADERS,
       });
     }

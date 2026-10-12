@@ -171,7 +171,10 @@
       } catch (err) {
         showTyping(false);
         console.error("Eroare la conectare:", err);
-        const detailMsg = err && err.name ? `${err.name}: ${err.message}` : String(err);
+        let detailMsg = err && err.message ? err.message : String(err);
+        if (err.name === "TypeError" || detailMsg.toLowerCase().includes("fetch")) {
+          detailMsg = `Nu s-a putut comunica cu serverul. (${detailMsg})`;
+        }
         appendMessage(`Eroare conexiune: ${detailMsg}`, 'error-msg');
       } finally {
         sendBtn.disabled = false;
