@@ -171,7 +171,8 @@
       } catch (err) {
         showTyping(false);
         console.error("Eroare la conectare:", err);
-        appendMessage(`Eroare conexiune: Nu s-a putut comunica cu serverul. (${err.message})`, 'error-msg');
+        const detailStr = err.name ? `${err.name}: ${err.message}` : String(err);
+        appendMessage(`Eroare conexiune: Nu s-a putut comunica cu serverul. (${detailStr})`, 'error-msg');
       } finally {
         sendBtn.disabled = false;
       }
