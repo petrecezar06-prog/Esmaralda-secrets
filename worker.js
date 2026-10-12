@@ -1,3 +1,4 @@
+// Esmeralda Secrets - Cloudflare Worker Backend
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
@@ -17,7 +18,7 @@ function createJsonResponse(data, status = 200) {
 
 export default {
   async fetch(request, env, ctx) {
-    // Handle OPTIONS preflight requests
+    // Handle OPTIONS preflight requests globally with 204 No Content
     if (request.method === "OPTIONS") {
       return new Response(null, {
         status: 204,
@@ -28,6 +29,7 @@ export default {
     try {
       let userMessage = "";
 
+      // Safely parse request payload for POST requests or URL params for GET
       if (request.method === "POST") {
         try {
           const body = await request.json();

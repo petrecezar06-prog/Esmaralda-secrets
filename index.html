@@ -161,17 +161,18 @@
         showTyping(false);
 
         if (!response.ok) {
-          throw new Error(`Eroare HTTP: ${response.status}`);
+          throw new Error(`HTTP ${response.status}: ${response.statusText || 'Eroare Server'}`);
         }
 
         const data = await response.json();
-        const replyText = data.reply || data.message || "Răspuns gol de la server.";
+        const replyText = data.reply || data.response || data.message || "Răspuns gol de la server.";
         appendMessage(replyText, 'bot');
 
       } catch (err) {
         showTyping(false);
         console.error("Eroare la conectare:", err);
-        appendMessage(`Eroare conexiune: Nu s-a putut comunica cu serverul. (${err.message})`, 'error-msg');
+        const detailMsg = err && err.name ? `${err.name}: ${err.message}` : String(err);
+        appendMessage(`Eroare conexiune: ${detailMsg}`, 'error-msg');
       } finally {
         sendBtn.disabled = false;
       }
