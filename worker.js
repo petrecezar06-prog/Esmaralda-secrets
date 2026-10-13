@@ -18,10 +18,10 @@ function createJsonResponse(data, status = 200) {
 
 export default {
   async fetch(request, env, ctx) {
-    // Handle OPTIONS preflight requests globally with 200 OK
+    // Handle OPTIONS preflight requests globally with 204 No Content
     if (request.method === "OPTIONS") {
       return new Response(null, {
-        status: 200,
+        status: 204,
         headers: CORS_HEADERS,
       });
     }
