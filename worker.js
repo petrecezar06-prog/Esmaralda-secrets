@@ -2,7 +2,7 @@
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, Accept",
   "Access-Control-Max-Age": "86400",
 };
 
@@ -18,10 +18,10 @@ function createJsonResponse(data, status = 200) {
 
 export default {
   async fetch(request, env, ctx) {
-    // Handle OPTIONS preflight requests globally with 200 OK
+    // Handle OPTIONS preflight requests globally with 204 No Content
     if (request.method === "OPTIONS") {
       return new Response(null, {
-        status: 200,
+        status: 204,
         headers: CORS_HEADERS,
       });
     }
@@ -54,40 +54,44 @@ export default {
       const apiKey = env ? env.OPENROUTER_API_KEY : null;
 
       if (apiKey) {
-        const openRouterRes = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${apiKey}`,
-            "Content-Type": "application/json",
-            "HTTP-Referer": "https://cezar06-prog.github.io",
-            "X-Title": "Esmeralda Secrets",
-          },
-          body: JSON.stringify({
-            model: "openrouter/auto",
-            messages: [
-              {
-                role: "system",
-                content: "Ești Esmeralda, o asistentă AI personală și investigatoare elegantă, inteligentă și misterioasă. Răspunzi politicos, clar și perspicace în limba română sau în limba utilizatorului."
-              },
-              {
-                role: "user",
-                content: userMessage
-              }
-            ]
-          })
-        });
-
-        if (openRouterRes.ok) {
-          const aiData = await openRouterRes.json();
-          const reply = aiData.choices?.[0]?.message?.content || "Nu am putut genera un răspuns în acest moment.";
-          return createJsonResponse({
-            status: "success",
-            response: reply,
-            reply: reply
+        try {
+          const openRouterRes = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${apiKey}`,
+              "Content-Type": "application/json",
+              "HTTP-Referer": "https://cezar06-prog.github.io",
+              "X-Title": "Esmeralda Secrets",
+            },
+            body: JSON.stringify({
+              model: "openrouter/auto",
+              messages: [
+                {
+                  role: "system",
+                  content: "Ești Esmeralda, o asistentă AI personală și investigatoare elegantă, inteligentă și misterioasă. Răspunzi politicos, clar și perspicace în limba română sau în limba utilizatorului."
+                },
+                {
+                  role: "user",
+                  content: userMessage
+                }
+              ]
+            })
           });
-        } else {
-          const errText = await openRouterRes.text();
-          console.error("OpenRouter error:", errText);
+
+          if (openRouterRes.ok) {
+            const aiData = await openRouterRes.json();
+            const reply = aiData.choices?.[0]?.message?.content || "Nu am putut genera un răspuns în acest moment.";
+            return createJsonResponse({
+              status: "success",
+              response: reply,
+              reply: reply
+            });
+          } else {
+            const errText = await openRouterRes.text();
+            console.error("OpenRouter error:", errText);
+          }
+        } catch (openRouterErr) {
+          console.error("OpenRouter request failed:", openRouterErr);
         }
       }
 
@@ -106,6 +110,7 @@ export default {
         {
           status: "error",
           error: err.message || "A apărut o eroare la procesarea cererii.",
+          reply: "A apărut o eroare la procesarea cererii pe server.",
         },
         500
       );

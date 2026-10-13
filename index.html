@@ -132,7 +132,10 @@
   </footer>
 
   <script>
-    const WORKER_URL = 'https://nameless-block-036e.petrecezar06.workers.dev';
+    const WORKER_ENDPOINTS = [
+      'https://nameless-block-036e.petrecezar06.workers.dev',
+      'https://nameless-block-036e.workers.dev'
+    ];
 
     const chatContainer = document.getElementById('chatContainer');
     const userInput = document.getElementById('userInput');
@@ -152,36 +155,46 @@
 
       showTyping(true);
 
-      try {
-        const response = await fetch(WORKER_URL, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ message: text })
-        });
+      let responseData = null;
+      let lastError = null;
 
-        showTyping(false);
+      for (const endpoint of WORKER_ENDPOINTS) {
+        try {
+          const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ message: text })
+          });
 
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText || 'Eroare Server'}`);
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText || 'Eroare Server'}`);
+          }
+
+          responseData = await response.json();
+          if (responseData) break;
+        } catch (err) {
+          console.warn(`Fetch error for endpoint ${endpoint}:`, err);
+          lastError = err;
         }
+      }
 
-        const data = await response.json();
-        const replyText = data.reply || data.response || data.message || "Răspuns gol de la server.";
+      showTyping(false);
+
+      if (responseData) {
+        const replyText = responseData.reply || responseData.response || responseData.message || "Răspuns gol de la server.";
         appendMessage(replyText, 'bot');
-
-      } catch (err) {
-        showTyping(false);
-        console.error("Eroare la conectare:", err);
-        let detailMsg = err && err.message ? err.message : String(err);
-        if (err.name === "TypeError" || detailMsg.toLowerCase().includes("fetch")) {
+      } else {
+        console.error("Eroare la conectare:", lastError);
+        let detailMsg = lastError && lastError.message ? lastError.message : String(lastError || 'Eroare necunoscută');
+        if (lastError && (lastError.name === "TypeError" || detailMsg.toLowerCase().includes("fetch"))) {
           detailMsg = `Nu s-a putut comunica cu serverul. (${detailMsg})`;
         }
         appendMessage(`Eroare conexiune: ${detailMsg}`, 'error-msg');
-      } finally {
-        sendBtn.disabled = false;
       }
+
+      sendBtn.disabled = false;
     }
 
     function appendMessage(text, type) {
