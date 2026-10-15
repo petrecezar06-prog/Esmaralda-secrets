@@ -132,10 +132,47 @@
   </footer>
 
   <script>
-    const WORKER_ENDPOINTS = [
-      'https://nameless-block-036e.petrecezar06.workers.dev',
-      'https://nameless-block-036e.workers.dev'
-    ];
+    function getWorkerEndpoints() {
+      const endpoints = [];
+      const defaultEndpoints = [
+        'https://nameless-block-036e.petrecezar06.workers.dev',
+        'https://nameless-block-036e.workers.dev'
+      ];
+
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const queryUrl = urlParams.get('worker_url') || urlParams.get('api') || urlParams.get('worker') || urlParams.get('endpoint');
+        if (queryUrl) endpoints.push(queryUrl);
+      } catch (e) {
+        console.warn('[Esmeralda] Cannot read URL parameters:', e);
+      }
+
+      try {
+        const storedUrl = localStorage.getItem('worker_url') || localStorage.getItem('WORKER_URL');
+        if (storedUrl) endpoints.push(storedUrl);
+      } catch (e) {
+        console.warn('[Esmeralda] Cannot access localStorage:', e);
+      }
+
+      if (window.WORKER_URL) endpoints.push(window.WORKER_URL);
+      if (Array.isArray(window.WORKER_ENDPOINTS)) endpoints.push(...window.WORKER_ENDPOINTS);
+
+      endpoints.push(...defaultEndpoints);
+
+      return endpoints
+        .map(url => {
+          if (!url || typeof url !== 'string') return null;
+          let cleaned = url.trim();
+          if (!cleaned) return null;
+          if (!/^https?:\/\//i.test(cleaned)) {
+            cleaned = 'https://' + cleaned;
+          } else if (cleaned.startsWith('http://')) {
+            cleaned = 'https://' + cleaned.slice(7);
+          }
+          return cleaned.replace(/\/+$/, '');
+        })
+        .filter((url, index, self) => url && self.indexOf(url) === index);
+    }
 
     const chatContainer = document.getElementById('chatContainer');
     const userInput = document.getElementById('userInput');
@@ -157,18 +194,27 @@
 
       let lastError = null;
       let response = null;
+      const endpoints = getWorkerEndpoints();
 
-      for (const endpoint of WORKER_ENDPOINTS) {
+      for (const endpoint of endpoints) {
         try {
           console.log(`[Esmeralda] Trimitere cerere POST către: ${endpoint}`);
           response = await fetch(endpoint, {
             method: 'POST',
+            mode: 'cors',
             headers: {
-              'Content-Type': 'application/json'
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
             },
             body: JSON.stringify({ message: text })
           });
+        } catch (err) {
+          console.error(`[Esmeralda] Network/fetch failure for endpoint ${endpoint}:`, err);
+          lastError = err;
+          response = null;
+        }
 
+        if (response) {
           if (response.ok) {
             console.log(`[Esmeralda] Răspuns primit cu succes de la ${endpoint} (Status: ${response.status})`);
             lastError = null;
@@ -178,9 +224,6 @@
             console.warn(`[Esmeralda] Serverul ${endpoint} a returnat status ${response.status}: ${response.statusText || 'Eroare'}. Corp răspuns: ${errorBody}`);
             lastError = new Error(`HTTP ${response.status}: ${response.statusText || 'Eroare Server'}`);
           }
-        } catch (err) {
-          console.error(`[Esmeralda] Eroare fetch pentru endpoint-ul ${endpoint}:`, err);
-          lastError = err;
         }
       }
 
