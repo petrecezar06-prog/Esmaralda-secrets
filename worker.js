@@ -1,16 +1,19 @@
 // Esmeralda Secrets - Cloudflare Worker Backend
-const CORS_HEADERS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
-  "Access-Control-Max-Age": "86400",
-};
+function getCorsHeaders(request) {
+  const reqHeaders = request ? request.headers.get("Access-Control-Request-Headers") : null;
+  return {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": reqHeaders || "Content-Type, Authorization, X-Requested-With, Accept",
+    "Access-Control-Max-Age": "86400",
+  };
+}
 
-function createJsonResponse(data, status = 200) {
+function createJsonResponse(data, status = 200, request = null) {
   return new Response(JSON.stringify(data), {
     status,
     headers: {
-      ...CORS_HEADERS,
+      ...getCorsHeaders(request),
       "Content-Type": "application/json; charset=utf-8",
     },
   });
@@ -22,7 +25,7 @@ export default {
     if (request.method === "OPTIONS") {
       return new Response(null, {
         status: 204,
-        headers: CORS_HEADERS,
+        headers: getCorsHeaders(request),
       });
     }
 
@@ -47,7 +50,7 @@ export default {
           status: "success",
           response: "Sunt Esmeralda. Cu ce te pot ajuta astăzi?",
           reply: "Sunt Esmeralda. Cu ce te pot ajuta astăzi?",
-        });
+        }, 200, request);
       }
 
       // If OPENROUTER_API_KEY is configured in env secrets, call OpenRouter
@@ -84,7 +87,7 @@ export default {
             status: "success",
             response: reply,
             reply: reply
-          });
+          }, 200, request);
         } else {
           const errText = await openRouterRes.text();
           console.error("OpenRouter error:", errText);
@@ -98,7 +101,7 @@ export default {
         status: "success",
         response: fallbackReply,
         reply: fallbackReply
-      });
+      }, 200, request);
 
     } catch (err) {
       console.error("Worker fetch error:", err);
@@ -107,7 +110,8 @@ export default {
           status: "error",
           error: err.message || "A apărut o eroare la procesarea cererii.",
         },
-        500
+        500,
+        request
       );
     }
   }

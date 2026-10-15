@@ -132,7 +132,10 @@
   </footer>
 
   <script>
-    const WORKER_URL = 'https://nameless-block-036e.petrecezar06.workers.dev';
+    const WORKER_ENDPOINTS = [
+      'https://nameless-block-036e.petrecezar06.workers.dev',
+      'https://nameless-block-036e.workers.dev'
+    ];
 
     const chatContainer = document.getElementById('chatContainer');
     const userInput = document.getElementById('userInput');
@@ -152,36 +155,50 @@
 
       showTyping(true);
 
-      try {
-        const response = await fetch(WORKER_URL, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ message: text })
-        });
+      let lastError = null;
+      let response = null;
 
-        showTyping(false);
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText || 'Eroare Server'}`);
+      for (const endpoint of WORKER_ENDPOINTS) {
+        try {
+          response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ message: text })
+          });
+          if (response.ok) {
+            lastError = null;
+            break;
+          } else {
+            lastError = new Error(`HTTP ${response.status}: ${response.statusText || 'Eroare Server'}`);
+          }
+        } catch (err) {
+          lastError = err;
         }
+      }
 
-        const data = await response.json();
-        const replyText = data.reply || data.response || data.message || "Răspuns gol de la server.";
-        appendMessage(replyText, 'bot');
+      showTyping(false);
 
-      } catch (err) {
-        showTyping(false);
+      if (lastError || !response || !response.ok) {
+        const err = lastError || new Error("Eroare necunoscută la conectare.");
         console.error("Eroare la conectare:", err);
         let detailMsg = err && err.message ? err.message : String(err);
         if (err.name === "TypeError" || detailMsg.toLowerCase().includes("fetch")) {
           detailMsg = `Nu s-a putut comunica cu serverul. (${detailMsg})`;
         }
         appendMessage(`Eroare conexiune: ${detailMsg}`, 'error-msg');
-      } finally {
-        sendBtn.disabled = false;
+      } else {
+        try {
+          const data = await response.json();
+          const replyText = data.reply || data.response || data.message || "Răspuns gol de la server.";
+          appendMessage(replyText, 'bot');
+        } catch (err) {
+          appendMessage(`Eroare procesare răspuns: ${err.message}`, 'error-msg');
+        }
       }
+
+      sendBtn.disabled = false;
     }
 
     function appendMessage(text, type) {
