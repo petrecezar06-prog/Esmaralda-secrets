@@ -1,4 +1,7 @@
 // Esmeralda Secrets - Cloudflare Worker Backend
+/**
+ * Generates full CORS headers to ensure cross-origin fetch requests succeed.
+ */
 function getCorsHeaders(request) {
   const reqHeaders = request ? request.headers.get("Access-Control-Request-Headers") : null;
   return {

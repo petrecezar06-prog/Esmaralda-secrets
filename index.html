@@ -160,6 +160,7 @@
 
       for (const endpoint of WORKER_ENDPOINTS) {
         try {
+          console.log(`[Esmeralda] Trimitere cerere POST către: ${endpoint}`);
           response = await fetch(endpoint, {
             method: 'POST',
             headers: {
@@ -167,13 +168,18 @@
             },
             body: JSON.stringify({ message: text })
           });
+
           if (response.ok) {
+            console.log(`[Esmeralda] Răspuns primit cu succes de la ${endpoint} (Status: ${response.status})`);
             lastError = null;
             break;
           } else {
+            const errorBody = await response.text().catch(() => '');
+            console.warn(`[Esmeralda] Serverul ${endpoint} a returnat status ${response.status}: ${response.statusText || 'Eroare'}. Corp răspuns: ${errorBody}`);
             lastError = new Error(`HTTP ${response.status}: ${response.statusText || 'Eroare Server'}`);
           }
         } catch (err) {
+          console.error(`[Esmeralda] Eroare fetch pentru endpoint-ul ${endpoint}:`, err);
           lastError = err;
         }
       }
@@ -182,18 +188,20 @@
 
       if (lastError || !response || !response.ok) {
         const err = lastError || new Error("Eroare necunoscută la conectare.");
-        console.error("Eroare la conectare:", err);
+        console.error("[Esmeralda] Eșec conectare la toate endpoint-urile. Detalii eroare finală:", err);
         let detailMsg = err && err.message ? err.message : String(err);
-        if (err.name === "TypeError" || detailMsg.toLowerCase().includes("fetch")) {
+        if (err.name === "TypeError" || detailMsg.toLowerCase().includes("fetch") || detailMsg.toLowerCase().includes("failed")) {
           detailMsg = `Nu s-a putut comunica cu serverul. (${detailMsg})`;
         }
         appendMessage(`Eroare conexiune: ${detailMsg}`, 'error-msg');
       } else {
         try {
           const data = await response.json();
+          console.log("[Esmeralda] Răspuns JSON de la server:", data);
           const replyText = data.reply || data.response || data.message || "Răspuns gol de la server.";
           appendMessage(replyText, 'bot');
         } catch (err) {
+          console.error("[Esmeralda] Eroare la procesarea/parsarea răspunsului JSON:", err);
           appendMessage(`Eroare procesare răspuns: ${err.message}`, 'error-msg');
         }
       }
