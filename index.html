@@ -164,6 +164,7 @@
           if (!url || typeof url !== 'string') return null;
           let cleaned = url.trim();
           if (!cleaned) return null;
+          if (cleaned.includes('example.com') || cleaned.includes('YOUR_WORKER') || cleaned.includes('placeholder')) return null;
           if (!/^https?:\/\//i.test(cleaned)) {
             cleaned = 'https://' + cleaned;
           } else if (cleaned.startsWith('http://')) {
@@ -198,7 +199,7 @@
 
       for (const endpoint of endpoints) {
         try {
-          console.log(`[Esmeralda] Trimitere cerere POST către: ${endpoint}`);
+          console.log(`[Esmeralda] Trimitere cerere POST către URL: ${endpoint}`);
           response = await fetch(endpoint, {
             method: 'POST',
             mode: 'cors',
@@ -209,8 +210,8 @@
             body: JSON.stringify({ message: text })
           });
         } catch (err) {
-          console.error(`[Esmeralda] Network/fetch failure for endpoint ${endpoint}:`, err);
-          lastError = err;
+          console.error(`[Esmeralda] Fetch network error at URL: ${endpoint}`, err);
+          lastError = new Error(`Failed to fetch from ${endpoint}: ${err && err.message ? err.message : String(err)}`);
           response = null;
         }
 
@@ -221,7 +222,7 @@
             break;
           } else {
             const errorBody = await response.text().catch(() => '');
-            console.warn(`[Esmeralda] Serverul ${endpoint} a returnat status ${response.status}: ${response.statusText || 'Eroare'}. Corp răspuns: ${errorBody}`);
+            console.error(`[Esmeralda] Server error from URL: ${endpoint} (Status: ${response.status} ${response.statusText}). Body: ${errorBody}`);
             lastError = new Error(`HTTP ${response.status}: ${response.statusText || 'Eroare Server'}`);
           }
         }
@@ -234,7 +235,7 @@
         console.error("[Esmeralda] Eșec conectare la toate endpoint-urile. Detalii eroare finală:", err);
         let detailMsg = err && err.message ? err.message : String(err);
         if (err.name === "TypeError" || detailMsg.toLowerCase().includes("fetch") || detailMsg.toLowerCase().includes("failed")) {
-          detailMsg = `Nu s-a putut comunica cu serverul. (${detailMsg})`;
+          detailMsg = `Nu s-a putut comunica cu serverul Cloudflare Worker (posibil eroare CORS, rețea sau URL inaccesibil). (${detailMsg})`;
         }
         appendMessage(`Eroare conexiune: ${detailMsg}`, 'error-msg');
       } else {
