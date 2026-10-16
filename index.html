@@ -135,9 +135,12 @@
     function getWorkerEndpoints() {
       const endpoints = [];
       const defaultEndpoints = [
-        'https://nameless-block-036e.petrecezar06.workers.dev',
-        'https://nameless-block-036e.workers.dev'
+        'https://nameless-block-036e.workers.dev',
+        'https://nameless-block-036e.petrecezar06.workers.dev'
       ];
+      if (typeof window !== 'undefined' && window.location && window.location.origin && window.location.origin !== 'null' && !window.location.origin.startsWith('file://')) {
+        defaultEndpoints.push(window.location.origin);
+      }
 
       try {
         const urlParams = new URLSearchParams(window.location.search);
@@ -164,9 +167,12 @@
           if (!url || typeof url !== 'string') return null;
           let cleaned = url.trim();
           if (!cleaned) return null;
+          if (cleaned.startsWith('/')) {
+            return cleaned;
+          }
           if (!/^https?:\/\//i.test(cleaned)) {
             cleaned = 'https://' + cleaned;
-          } else if (cleaned.startsWith('http://')) {
+          } else if (cleaned.startsWith('http://') && !cleaned.includes('localhost') && !cleaned.includes('127.0.0.1')) {
             cleaned = 'https://' + cleaned.slice(7);
           }
           return cleaned.replace(/\/+$/, '');
