@@ -177,7 +177,20 @@
           }
           return cleaned.replace(/\/+$/, '');
         })
-        .filter((url, index, self) => url && self.indexOf(url) === index);
+        .filter((url, index, self) => {
+          if (!url || self.indexOf(url) !== index) return false;
+          try {
+            if (url.startsWith('/')) return true;
+            const parsed = new URL(url);
+            const host = parsed.hostname.toLowerCase();
+            if (host.endsWith('github.io') || host.endsWith('pages.dev') || host.endsWith('netlify.app') || host.endsWith('vercel.app')) {
+              return false;
+            }
+            return true;
+          } catch (e) {
+            return true;
+          }
+        });
     }
 
     const chatContainer = document.getElementById('chatContainer');
