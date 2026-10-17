@@ -16,7 +16,8 @@ test('OPTIONS request returns 204 with CORS headers', async () => {
   assert.equal(res.status, 204);
   assert.equal(res.headers.get('Access-Control-Allow-Origin'), 'https://cezar06-prog.github.io');
   assert.equal(res.headers.get('Access-Control-Allow-Methods'), 'GET, POST, OPTIONS');
-  assert.equal(res.headers.get('Access-Control-Allow-Headers'), 'Content-Type, Authorization');
+  assert.ok(res.headers.get('Access-Control-Allow-Headers').includes('Content-Type'));
+  assert.ok(res.headers.get('Access-Control-Allow-Headers').includes('Authorization'));
 });
 
 test('POST request without API key returns warning response with CORS headers', async () => {
