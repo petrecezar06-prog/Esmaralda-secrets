@@ -138,8 +138,14 @@
         'https://nameless-block-036e.workers.dev',
         'https://nameless-block-036e.petrecezar06.workers.dev'
       ];
+
+      // On same-origin hosting, only push origin if it is actually a worker or relative endpoint
       if (typeof window !== 'undefined' && window.location && window.location.origin && window.location.origin !== 'null' && !window.location.origin.startsWith('file://')) {
-        defaultEndpoints.push(window.location.origin);
+        const host = window.location.hostname || '';
+        // Skip GitHub Pages or static hosts unless explicitly configured via parameters
+        if (!host.endsWith('github.io') && !host.endsWith('pages.dev') && !host.endsWith('netlify.app') && !host.endsWith('vercel.app')) {
+          defaultEndpoints.push(window.location.origin);
+        }
       }
 
       try {
@@ -240,7 +246,7 @@
         console.error("[Esmeralda] Eșec conectare la toate endpoint-urile. Detalii eroare finală:", err);
         let detailMsg = err && err.message ? err.message : String(err);
         if (err.name === "TypeError" || detailMsg.toLowerCase().includes("fetch") || detailMsg.toLowerCase().includes("failed")) {
-          detailMsg = `Nu s-a putut comunica cu serverul. (${detailMsg})`;
+          detailMsg = `Nu s-a putut comunica cu serverul (${endpoints[0] || 'endpoint'}). Verificați publicarea Cloudflare Worker și domeniul configurat. (${detailMsg})`;
         }
         appendMessage(`Eroare conexiune: ${detailMsg}`, 'error-msg');
       } else {

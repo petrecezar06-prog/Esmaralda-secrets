@@ -1,11 +1,13 @@
 // Esmeralda Secrets - Cloudflare Worker Backend
+
 /**
- * Generates full CORS headers to ensure cross-origin fetch requests succeed.
+ * Generates dynamic CORS headers based on incoming request origin and requested headers.
  */
 function getCorsHeaders(request) {
+  const origin = (request && request.headers.get("Origin")) || "*";
   const reqHeaders = request ? request.headers.get("Access-Control-Request-Headers") : null;
   return {
-    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Origin": origin === "null" ? "*" : origin,
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": reqHeaders || "Content-Type, Authorization, X-Requested-With, Accept",
     "Access-Control-Max-Age": "86400",
@@ -23,7 +25,7 @@ function createJsonResponse(data, status = 200, request = null) {
 }
 
 export default {
-  async fetch(request, env, ctx) {
+  async fetch(request, env = {}, ctx = {}) {
     // Handle OPTIONS preflight requests globally with 204 No Content
     if (request.method === "OPTIONS") {
       return new Response(null, {
@@ -58,9 +60,11 @@ export default {
 
       // If OPENROUTER_API_KEY is configured in env secrets, call OpenRouter
       const apiKey = env ? env.OPENROUTER_API_KEY : null;
+      const model = (env && env.OPENROUTER_MODEL) ? env.OPENROUTER_MODEL : "openrouter/auto";
 
       if (apiKey) {
-        const openRouterRes = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        const fetchImpl = (env && env.fetch) ? env.fetch : fetch;
+        const openRouterRes = await fetchImpl("https://openrouter.ai/api/v1/chat/completions", {
           method: "POST",
           headers: {
             "Authorization": `Bearer ${apiKey}`,
@@ -69,7 +73,7 @@ export default {
             "X-Title": "Esmeralda Secrets",
           },
           body: JSON.stringify({
-            model: "openrouter/auto",
+            model: model,
             messages: [
               {
                 role: "system",
@@ -89,21 +93,28 @@ export default {
           return createJsonResponse({
             status: "success",
             response: reply,
-            reply: reply
+            reply: reply,
+            model: model
           }, 200, request);
         } else {
-          const errText = await openRouterRes.text();
+          const errText = await openRouterRes.text().catch(() => "");
           console.error("OpenRouter error:", errText);
+          return createJsonResponse({
+            status: "error",
+            error: `OpenRouter API Error (${openRouterRes.status}): ${errText || openRouterRes.statusText}`,
+            reply: `Eroare OpenRouter API (${openRouterRes.status}). Te rugăm să încerci din nou.`
+          }, openRouterRes.status >= 400 && openRouterRes.status < 600 ? openRouterRes.status : 502, request);
         }
       }
 
-      // Default / fallback response when API key is missing or OpenRouter fails
-      const fallbackReply = `[Esmeralda]: Am primit mesajul tău: "${userMessage}". Conexiunea cu serverul funcționează corect. (Pentru răspunsuri AI complete, configurează OPENROUTER_API_KEY în Cloudflare Worker).`;
+      // If OPENROUTER_API_KEY is not configured, inform the client with clear status
+      const fallbackReply = `[Esmeralda]: Am primit mesajul tău: "${userMessage}". Cheia OPENROUTER_API_KEY nu este configurată în Cloudflare Worker secrets.`;
 
       return createJsonResponse({
-        status: "success",
+        status: "warning",
         response: fallbackReply,
-        reply: fallbackReply
+        reply: fallbackReply,
+        error: "OPENROUTER_API_KEY is not set."
       }, 200, request);
 
     } catch (err) {
@@ -112,6 +123,7 @@ export default {
         {
           status: "error",
           error: err.message || "A apărut o eroare la procesarea cererii.",
+          reply: `Eroare server: ${err.message || "Eroare necunoscută"}`
         },
         500,
         request
