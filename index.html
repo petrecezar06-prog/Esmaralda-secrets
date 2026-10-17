@@ -113,12 +113,25 @@
 <body>
 
   <header>
-    <div class="avatar">E</div>
-    <div>
-      <h3>Esmeralda Secrets</h3>
-      <span class="status">● Online</span>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <div class="avatar">E</div>
+      <div>
+        <h3>Esmeralda Secrets</h3>
+        <span class="status">● Online</span>
+      </div>
     </div>
+    <button id="settingsBtn" style="margin-left:auto; padding:6px 12px; font-size:12px; background:#2d1b4e; border:1px solid #7c3aed; border-radius:12px; cursor:pointer;" onclick="toggleSettings()">⚙ Setări Endpoint</button>
   </header>
+
+  <div id="settingsModal" style="display:none; padding:12px 16px; background:#1a102f; border-bottom:1px solid #2d1b4e; font-size:13px;">
+    <label style="display:block; margin-bottom:6px; font-weight:bold;">URL Worker Cloudflare Custom:</label>
+    <div style="display:flex; gap:8px;">
+      <input type="text" id="customWorkerInput" placeholder="https://nameless-block-036e.workers.dev" style="font-size:13px; padding:8px 12px;" />
+      <button onclick="saveCustomWorkerUrl()" style="padding:8px 14px; font-size:13px;">Salvează</button>
+      <button onclick="resetWorkerUrl()" style="padding:8px 14px; font-size:13px; background:#4b5563;">Reset</button>
+    </div>
+    <div id="endpointStatus" style="margin-top:6px; font-size:11px; color:#a78bfa;"></div>
+  </div>
 
   <div id="chatContainer">
     <div class="message bot">
@@ -139,12 +152,11 @@
         'https://nameless-block-036e.petrecezar06.workers.dev'
       ];
 
-      // On same-origin hosting, only push origin if it is actually a worker or relative endpoint
+      // Only push origin if hosted directly on a Cloudflare Worker domain (*.workers.dev)
       if (typeof window !== 'undefined' && window.location && window.location.origin && window.location.origin !== 'null' && !window.location.origin.startsWith('file://')) {
         const host = window.location.hostname || '';
-        // Skip GitHub Pages or static hosts unless explicitly configured via parameters
-        if (!host.endsWith('github.io') && !host.endsWith('pages.dev') && !host.endsWith('netlify.app') && !host.endsWith('vercel.app')) {
-          defaultEndpoints.push(window.location.origin);
+        if (host.endsWith('.workers.dev')) {
+          defaultEndpoints.unshift(window.location.origin);
         }
       }
 
@@ -284,6 +296,40 @@
         typingDiv = null;
       }
       scrollToBottom();
+    }
+
+    function toggleSettings() {
+      const modal = document.getElementById('settingsModal');
+      modal.style.display = modal.style.display === 'none' ? 'block' : 'none';
+      const saved = localStorage.getItem('worker_url') || '';
+      document.getElementById('customWorkerInput').value = saved || 'https://nameless-block-036e.workers.dev';
+      updateEndpointStatus();
+    }
+
+    function saveCustomWorkerUrl() {
+      const val = document.getElementById('customWorkerInput').value.trim();
+      if (val) {
+        localStorage.setItem('worker_url', val);
+      } else {
+        localStorage.removeItem('worker_url');
+      }
+      updateEndpointStatus();
+      alert('URL-ul Worker a fost salvat!');
+    }
+
+    function resetWorkerUrl() {
+      localStorage.removeItem('worker_url');
+      document.getElementById('customWorkerInput').value = 'https://nameless-block-036e.workers.dev';
+      updateEndpointStatus();
+      alert('URL-ul Worker a fost resetat la cel implicit.');
+    }
+
+    function updateEndpointStatus() {
+      const endpoints = getWorkerEndpoints();
+      const statusEl = document.getElementById('endpointStatus');
+      if (statusEl) {
+        statusEl.textContent = 'Endpoint activ utilizat: ' + endpoints[0];
+      }
     }
 
     function scrollToBottom() {

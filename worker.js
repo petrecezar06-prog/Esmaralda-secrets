@@ -5,11 +5,10 @@
  */
 function getCorsHeaders(request) {
   const origin = (request && request.headers.get("Origin")) || "*";
-  const reqHeaders = request ? request.headers.get("Access-Control-Request-Headers") : null;
   return {
     "Access-Control-Allow-Origin": origin === "null" ? "*" : origin,
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": reqHeaders || "Content-Type, Authorization, X-Requested-With, Accept",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, Accept",
     "Access-Control-Max-Age": "86400",
   };
 }
