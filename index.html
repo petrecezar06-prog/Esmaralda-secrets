@@ -218,6 +218,7 @@
 
       let lastError = null;
       let response = null;
+      let responseData = null;
       const endpoints = getWorkerEndpoints();
 
       for (const endpoint of endpoints) {
@@ -232,45 +233,49 @@
             },
             body: JSON.stringify({ message: text })
           });
+
+          if (response) {
+            try {
+              responseData = await response.json();
+            } catch (jsonErr) {
+              const rawText = await response.text().catch(() => '');
+              responseData = { error: rawText || `HTTP ${response.status}: ${response.statusText}` };
+            }
+
+            if (response.ok) {
+              console.log(`[Esmeralda] Răspuns primit cu succes de la ${endpoint} (Status: ${response.status})`);
+              lastError = null;
+              break;
+            } else {
+              console.warn(`[Esmeralda] Serverul ${endpoint} a returnat status ${response.status}`);
+              lastError = new Error(responseData?.error || responseData?.reply || `HTTP ${response.status}: ${response.statusText || 'Eroare Server'}`);
+            }
+          }
         } catch (err) {
           console.error(`[Esmeralda] Network/fetch failure for endpoint ${endpoint}:`, err);
           lastError = err;
           response = null;
-        }
-
-        if (response) {
-          if (response.ok) {
-            console.log(`[Esmeralda] Răspuns primit cu succes de la ${endpoint} (Status: ${response.status})`);
-            lastError = null;
-            break;
-          } else {
-            const errorBody = await response.text().catch(() => '');
-            console.warn(`[Esmeralda] Serverul ${endpoint} a returnat status ${response.status}: ${response.statusText || 'Eroare'}. Corp răspuns: ${errorBody}`);
-            lastError = new Error(`HTTP ${response.status}: ${response.statusText || 'Eroare Server'}`);
-          }
+          responseData = null;
         }
       }
 
       showTyping(false);
 
-      if (lastError || !response || !response.ok) {
+      if (response && responseData) {
+        const replyText = responseData.reply || responseData.response || responseData.message || responseData.error;
+        if (response.ok) {
+          appendMessage(replyText || "Răspuns gol de la server.", 'bot');
+        } else {
+          appendMessage(`Eroare server (${response.status}): ${replyText || 'Eroare necunoscută'}`, 'error-msg');
+        }
+      } else {
         const err = lastError || new Error("Eroare necunoscută la conectare.");
         console.error("[Esmeralda] Eșec conectare la toate endpoint-urile. Detalii eroare finală:", err);
         let detailMsg = err && err.message ? err.message : String(err);
         if (err.name === "TypeError" || detailMsg.toLowerCase().includes("fetch") || detailMsg.toLowerCase().includes("failed")) {
-          detailMsg = `Nu s-a putut comunica cu serverul (${endpoints[0] || 'endpoint'}). Verificați publicarea Cloudflare Worker și domeniul configurat. (${detailMsg})`;
+          detailMsg = `Nu s-a putut comunica cu serverul (${endpoints[0] || 'https://nameless-block-036e.workers.dev'}). Verificați publicarea Cloudflare Worker și domeniul configurat. (${detailMsg})`;
         }
         appendMessage(`Eroare conexiune: ${detailMsg}`, 'error-msg');
-      } else {
-        try {
-          const data = await response.json();
-          console.log("[Esmeralda] Răspuns JSON de la server:", data);
-          const replyText = data.reply || data.response || data.message || "Răspuns gol de la server.";
-          appendMessage(replyText, 'bot');
-        } catch (err) {
-          console.error("[Esmeralda] Eroare la procesarea/parsarea răspunsului JSON:", err);
-          appendMessage(`Eroare procesare răspuns: ${err.message}`, 'error-msg');
-        }
       }
 
       sendBtn.disabled = false;
