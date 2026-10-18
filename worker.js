@@ -4,7 +4,7 @@
  * Generates dynamic CORS headers based on incoming request origin and requested headers.
  */
 function getCorsHeaders(request) {
-  const origin = (request && request.headers.get("Origin")) || "*";
+  const origin = (request && request.headers && typeof request.headers.get === "function" && request.headers.get("Origin")) || "*";
   return {
     "Access-Control-Allow-Origin": origin === "null" ? "*" : origin,
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
@@ -57,52 +57,61 @@ export default {
         }, 200, request);
       }
 
-      // If OPENROUTER_API_KEY is configured in env secrets, call OpenRouter
+      // Reference OPENROUTER_API_KEY correctly from env
       const apiKey = env ? env.OPENROUTER_API_KEY : null;
       const model = (env && env.OPENROUTER_MODEL) ? env.OPENROUTER_MODEL : "openrouter/auto";
 
       if (apiKey) {
         const fetchImpl = (env && env.fetch) ? env.fetch : fetch;
-        const openRouterRes = await fetchImpl("https://openrouter.ai/api/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${apiKey}`,
-            "Content-Type": "application/json",
-            "HTTP-Referer": "https://cezar06-prog.github.io",
-            "X-Title": "Esmeralda Secrets",
-          },
-          body: JSON.stringify({
-            model: model,
-            messages: [
-              {
-                role: "system",
-                content: "Ești Esmeralda, o asistentă AI personală și investigatoare elegantă, inteligentă și misterioasă. Răspunzi politicos, clar și perspicace în limba română sau în limba utilizatorului."
-              },
-              {
-                role: "user",
-                content: userMessage
-              }
-            ]
-          })
-        });
+        try {
+          const openRouterRes = await fetchImpl("https://openrouter.ai/api/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${apiKey}`,
+              "Content-Type": "application/json",
+              "HTTP-Referer": "https://cezar06-prog.github.io",
+              "X-Title": "Esmeralda Secrets",
+            },
+            body: JSON.stringify({
+              model: model,
+              messages: [
+                {
+                  role: "system",
+                  content: "Ești Esmeralda, o asistentă AI personală și investigatoare elegantă, inteligentă și misterioasă. Răspunzi politicos, clar și perspicace în limba română sau în limba utilizatorului."
+                },
+                {
+                  role: "user",
+                  content: userMessage
+                }
+              ]
+            })
+          });
 
-        if (openRouterRes.ok) {
-          const aiData = await openRouterRes.json();
-          const reply = aiData.choices?.[0]?.message?.content || "Nu am putut genera un răspuns în acest moment.";
-          return createJsonResponse({
-            status: "success",
-            response: reply,
-            reply: reply,
-            model: model
-          }, 200, request);
-        } else {
-          const errText = await openRouterRes.text().catch(() => "");
-          console.error("OpenRouter error:", errText);
+          if (openRouterRes.ok) {
+            const aiData = await openRouterRes.json();
+            const reply = aiData.choices?.[0]?.message?.content || "Nu am putut genera un răspuns în acest moment.";
+            return createJsonResponse({
+              status: "success",
+              response: reply,
+              reply: reply,
+              model: model
+            }, 200, request);
+          } else {
+            const errText = await openRouterRes.text().catch(() => "");
+            console.error("OpenRouter error:", errText);
+            return createJsonResponse({
+              status: "error",
+              error: `OpenRouter API Error (${openRouterRes.status}): ${errText || openRouterRes.statusText}`,
+              reply: `Eroare OpenRouter API (${openRouterRes.status}). Te rugăm să încerci din nou.`
+            }, 500, request);
+          }
+        } catch (openRouterErr) {
+          console.error("OpenRouter fetch exception:", openRouterErr);
           return createJsonResponse({
             status: "error",
-            error: `OpenRouter API Error (${openRouterRes.status}): ${errText || openRouterRes.statusText}`,
-            reply: `Eroare OpenRouter API (${openRouterRes.status}). Te rugăm să încerci din nou.`
-          }, openRouterRes.status >= 400 && openRouterRes.status < 600 ? openRouterRes.status : 502, request);
+            error: openRouterErr.message || "A apărut o eroare la comunicarea cu OpenRouter.",
+            reply: `Eroare OpenRouter: ${openRouterErr.message || "Eroare rețea/serviciu"}`
+          }, 500, request);
         }
       }
 
