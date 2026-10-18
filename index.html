@@ -1,345 +1,169 @@
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Esmeralda Secrets</title>
-  <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="icon.png">
-  <meta name="theme-color" content="#4a154b">
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    }
-    body {
-      background-color: #0f0a1c;
-      color: #ffffff;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      justify-content: space-between;
-    }
-    header {
-      padding: 16px;
-      background: #1a102f;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      border-bottom: 1px solid #2d1b4e;
-    }
-    .avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: #7c3aed;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-    }
-    .status {
-      font-size: 12px;
-      color: #10b981;
-    }
-    #chatContainer {
-      flex: 1;
-      padding: 16px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .message {
-      max-width: 80%;
-      padding: 12px 16px;
-      border-radius: 16px;
-      font-size: 14px;
-      line-height: 1.4;
-      word-break: break-word;
-    }
-    .user {
-      align-self: flex-end;
-      background-color: #6d28d9;
-      color: #ffffff;
-      border-bottom-right-radius: 4px;
-    }
-    .bot {
-      align-self: flex-start;
-      background-color: #261646;
-      color: #e2e8f0;
-      border-bottom-left-radius: 4px;
-    }
-    .error-msg {
-      align-self: center;
-      background-color: #450a0a;
-      color: #fca5a5;
-      border: 1px solid #991b1b;
-      border-radius: 8px;
-      text-align: center;
-    }
-    footer {
-      padding: 16px;
-      background: #1a102f;
-      display: flex;
-      gap: 8px;
-      border-top: 1px solid #2d1b4e;
-    }
-    input {
-      flex: 1;
-      padding: 12px 16px;
-      border-radius: 24px;
-      border: 1px solid #3b2164;
-      background: #0f0a1c;
-      color: #fff;
-      outline: none;
-    }
-    button {
-      padding: 12px 20px;
-      border-radius: 24px;
-      border: none;
-      background: #7c3aed;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    button:disabled {
-      opacity: 0.5;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Esmeralda Secrets</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        #chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .message {
+            max-width: 75%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            line-height: 1.4;
+        }
+        .user-message {
+            background-color: #6200ee;
+            align-self: flex-end;
+        }
+        .bot-message {
+            background-color: #333333;
+            align-self: flex-start;
+        }
+        .error-message {
+            background-color: #b00020;
+            align-self: center;
+            text-align: center;
+        }
+        #input-container {
+            display: flex;
+            padding: 15px;
+            background-color: #1e1e1e;
+            border-top: 1px solid #333;
+        }
+        #user-input {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #444;
+            background-color: #2a2a2a;
+            color: white;
+            font-size: 16px;
+        }
+        #send-button {
+            background-color: #6200ee;
+            color: white;
+            border: none;
+            padding: 0 20px;
+            margin-left: 10px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        #send-button:hover {
+            background-color: #7c4dff;
+        }
+    </style>
 </head>
 <body>
 
-  <header>
-    <div style="display:flex; align-items:center; gap:12px;">
-      <div class="avatar">E</div>
-      <div>
-        <h3>Esmeralda Secrets</h3>
-        <span class="status">● Online</span>
-      </div>
+    <div id="chat-container">
+        <div class="message bot-message">Salut! Sunt Esmeralda, inteligența ta personală. Cu ce te pot ajuta astăzi?</div>
     </div>
-    <button id="settingsBtn" style="margin-left:auto; padding:6px 12px; font-size:12px; background:#2d1b4e; border:1px solid #7c3aed; border-radius:12px; cursor:pointer;" onclick="toggleSettings()">⚙ Setări Endpoint</button>
-  </header>
 
-  <div id="settingsModal" style="display:none; padding:12px 16px; background:#1a102f; border-bottom:1px solid #2d1b4e; font-size:13px;">
-    <label style="display:block; margin-bottom:6px; font-weight:bold;">URL Worker Cloudflare Custom:</label>
-    <div style="display:flex; gap:8px;">
-      <input type="text" id="customWorkerInput" placeholder="https://nameless-block-036e.workers.dev" style="font-size:13px; padding:8px 12px;" />
-      <button onclick="saveCustomWorkerUrl()" style="padding:8px 14px; font-size:13px;">Salvează</button>
-      <button onclick="resetWorkerUrl()" style="padding:8px 14px; font-size:13px; background:#4b5563;">Reset</button>
+    <div id="input-container">
+        <input type="text" id="user-input" placeholder="Scrie un mesaj..." autocomplete="off">
+        <button id="send-button" onclick="sendMessage()">Trimite</button>
     </div>
-    <div id="endpointStatus" style="margin-top:6px; font-size:11px; color:#a78bfa;"></div>
-  </div>
 
-  <div id="chatContainer">
-    <div class="message bot">
-      Salut! Sunt <b>Esmeralda</b>, inteligența ta personală. Cu ce te pot ajuta astăzi?
-    </div>
-  </div>
+    <script>
+        // ADRESA TA EXACTĂ DE CLOUDFLARE WORKER (cu subdomeniul tău personal)
+        const WORKER_URL = "https://nameless-block-036e.petre-cezar06.workers.dev";
 
-  <footer>
-    <input type="text" id="userInput" placeholder="Scrie un mesaj..." />
-    <button id="sendBtn" onclick="sendMessage()">Trimite</button>
-  </footer>
+        const chatContainer = document.getElementById("chat-container");
+        const userInput = document.getElementById("user-input");
 
-  <script>
-    function getWorkerEndpoints() {
-      const endpoints = [];
-      const defaultEndpoints = [
-        'https://nameless-block-036e.workers.dev',
-        'https://nameless-block-036e.petrecezar06.workers.dev'
-      ];
+        userInput.addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                sendMessage();
+            }
+        });
 
-      // Only push origin if hosted directly on a Cloudflare Worker domain (*.workers.dev)
-      if (typeof window !== 'undefined' && window.location && window.location.origin && window.location.origin !== 'null' && !window.location.origin.startsWith('file://')) {
-        const host = window.location.hostname || '';
-        if (host.endsWith('.workers.dev')) {
-          defaultEndpoints.unshift(window.location.origin);
-        }
-      }
+        async function sendMessage() {
+            const text = userInput.value.trim();
+            if (!text) return;
 
-      try {
-        const urlParams = new URLSearchParams(window.location.search);
-        const queryUrl = urlParams.get('worker_url') || urlParams.get('api') || urlParams.get('worker') || urlParams.get('endpoint');
-        if (queryUrl) endpoints.push(queryUrl);
-      } catch (e) {
-        console.warn('[Esmeralda] Cannot read URL parameters:', e);
-      }
+            // Afișează mesajul utilizatorului în chat
+            appendMessage(text, "user-message");
+            userInput.value = "";
+            chatContainer.scrollTop = chatContainer.scrollHeight;
 
-      try {
-        const storedUrl = localStorage.getItem('worker_url') || localStorage.getItem('WORKER_URL');
-        if (storedUrl) endpoints.push(storedUrl);
-      } catch (e) {
-        console.warn('[Esmeralda] Cannot access localStorage:', e);
-      }
+            // Indicator de încărcare temporar
+            const loadingId = appendMessage("Se gândește...", "bot-message");
 
-      if (window.WORKER_URL) endpoints.push(window.WORKER_URL);
-      if (Array.isArray(window.WORKER_ENDPOINTS)) endpoints.push(...window.WORKER_ENDPOINTS);
-
-      endpoints.push(...defaultEndpoints);
-
-      return endpoints
-        .map(url => {
-          if (!url || typeof url !== 'string') return null;
-          let cleaned = url.trim();
-          if (!cleaned) return null;
-          if (cleaned.startsWith('/')) {
-            return cleaned;
-          }
-          if (!/^https?:\/\//i.test(cleaned)) {
-            cleaned = 'https://' + cleaned;
-          } else if (cleaned.startsWith('http://') && !cleaned.includes('localhost') && !cleaned.includes('127.0.0.1')) {
-            cleaned = 'https://' + cleaned.slice(7);
-          }
-          return cleaned.replace(/\/+$/, '');
-        })
-        .filter((url, index, self) => url && self.indexOf(url) === index);
-    }
-
-    const chatContainer = document.getElementById('chatContainer');
-    const userInput = document.getElementById('userInput');
-    const sendBtn = document.getElementById('sendBtn');
-
-    userInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') sendMessage();
-    });
-
-    async function sendMessage() {
-      const text = userInput.value.trim();
-      if (!text) return;
-
-      appendMessage(text, 'user');
-      userInput.value = '';
-      sendBtn.disabled = true;
-
-      showTyping(true);
-
-      let lastError = null;
-      let response = null;
-      let responseData = null;
-      const endpoints = getWorkerEndpoints();
-
-      for (const endpoint of endpoints) {
-        try {
-          console.log(`[Esmeralda] Trimitere cerere POST către: ${endpoint}`);
-          response = await fetch(endpoint, {
-            method: 'POST',
-            mode: 'cors',
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json'
-            },
-            body: JSON.stringify({ message: text })
-          });
-
-          if (response) {
             try {
-              responseData = await response.json();
-            } catch (jsonErr) {
-              const rawText = await response.text().catch(() => '');
-              responseData = { error: rawText || `HTTP ${response.status}: ${response.statusText}` };
+                const response = await fetch(WORKER_URL, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        model: "openai/gpt-3.5-turbo",
+                        messages: [
+                            { role: "system", content: "Ești Esmeralda, un asistent virtual inteligent și prietenos care răspunde în limba română." },
+                            { role: "user", content: text }
+                        ]
+                    })
+                });
+
+                // Elimină mesajul de încărcare
+                document.getElementById(loadingId).remove();
+
+                if (!response.ok) {
+                    throw new Error(`Eroare HTTP: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                // Extrage răspunsul de la modelul AI (OpenRouter / OpenAI format)
+                let reply = "Nu am primit un răspuns valid.";
+                if (data.choices && data.choices.length > 0) {
+                    reply = data.choices[0].message.content;
+                } else if (data.error) {
+                    reply = `Eroare server: ${data.error.message || data.error}`;
+                }
+
+                appendMessage(reply, "bot-message");
+
+            } catch (error) {
+                // Elimină mesajul de încărcare dacă a eșuat
+                const loadingElem = document.getElementById(loadingId);
+                if (loadingElem) loadingElem.remove();
+
+                console.error("Eroare fetch:", error);
+                appendMessage(`Eroare conexiune: Nu s-a putut comunica cu serverul (${WORKER_URL}). Verifică publicarea Cloudflare Worker. (${error.message})`, "error-message");
             }
 
-            if (response.ok) {
-              console.log(`[Esmeralda] Răspuns primit cu succes de la ${endpoint} (Status: ${response.status})`);
-              lastError = null;
-              break;
-            } else {
-              console.warn(`[Esmeralda] Serverul ${endpoint} a returnat status ${response.status}`);
-              lastError = new Error(responseData?.error || responseData?.reply || `HTTP ${response.status}: ${response.statusText || 'Eroare Server'}`);
-            }
-          }
-        } catch (err) {
-          console.error(`[Esmeralda] Network/fetch failure for endpoint ${endpoint}:`, err);
-          lastError = err;
-          response = null;
-          responseData = null;
+            chatContainer.scrollTop = chatContainer.scrollHeight;
         }
-      }
 
-      showTyping(false);
-
-      if (response && responseData) {
-        const replyText = responseData.reply || responseData.response || responseData.message || responseData.error;
-        if (response.ok) {
-          appendMessage(replyText || "Răspuns gol de la server.", 'bot');
-        } else {
-          appendMessage(`Eroare server (${response.status}): ${replyText || 'Eroare necunoscută'}`, 'error-msg');
+        function appendMessage(text, className) {
+            const messageDiv = document.createElement("div");
+            messageDiv.className = `message ${className}`;
+            messageDiv.innerText = text;
+            const id = "msg-" + Date.now() + "-" + Math.random();
+            messageDiv.id = id;
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            return id;
         }
-      } else {
-        const err = lastError || new Error("Eroare necunoscută la conectare.");
-        console.error("[Esmeralda] Eșec conectare la toate endpoint-urile. Detalii eroare finală:", err);
-        let detailMsg = err && err.message ? err.message : String(err);
-        if (err.name === "TypeError" || detailMsg.toLowerCase().includes("fetch") || detailMsg.toLowerCase().includes("failed")) {
-          detailMsg = `Nu s-a putut comunica cu serverul (${endpoints[0] || 'https://nameless-block-036e.workers.dev'}). Verificați publicarea Cloudflare Worker și domeniul configurat. (${detailMsg})`;
-        }
-        appendMessage(`Eroare conexiune: ${detailMsg}`, 'error-msg');
-      }
-
-      sendBtn.disabled = false;
-    }
-
-    function appendMessage(text, type) {
-      const msgDiv = document.createElement('div');
-      msgDiv.className = `message ${type}`;
-      msgDiv.textContent = text;
-      chatContainer.appendChild(msgDiv);
-      scrollToBottom();
-    }
-
-    let typingDiv = null;
-    function showTyping(show) {
-      if (show) {
-        typingDiv = document.createElement('div');
-        typingDiv.className = 'message bot';
-        typingDiv.textContent = 'Esmeralda scrie...';
-        chatContainer.appendChild(typingDiv);
-      } else if (typingDiv) {
-        typingDiv.remove();
-        typingDiv = null;
-      }
-      scrollToBottom();
-    }
-
-    function toggleSettings() {
-      const modal = document.getElementById('settingsModal');
-      modal.style.display = modal.style.display === 'none' ? 'block' : 'none';
-      const saved = localStorage.getItem('worker_url') || '';
-      document.getElementById('customWorkerInput').value = saved || 'https://nameless-block-036e.workers.dev';
-      updateEndpointStatus();
-    }
-
-    function saveCustomWorkerUrl() {
-      const val = document.getElementById('customWorkerInput').value.trim();
-      if (val) {
-        localStorage.setItem('worker_url', val);
-      } else {
-        localStorage.removeItem('worker_url');
-      }
-      updateEndpointStatus();
-      alert('URL-ul Worker a fost salvat!');
-    }
-
-    function resetWorkerUrl() {
-      localStorage.removeItem('worker_url');
-      document.getElementById('customWorkerInput').value = 'https://nameless-block-036e.workers.dev';
-      updateEndpointStatus();
-      alert('URL-ul Worker a fost resetat la cel implicit.');
-    }
-
-    function updateEndpointStatus() {
-      const endpoints = getWorkerEndpoints();
-      const statusEl = document.getElementById('endpointStatus');
-      if (statusEl) {
-        statusEl.textContent = 'Endpoint activ utilizat: ' + endpoints[0];
-      }
-    }
-
-    function scrollToBottom() {
-      chatContainer.scrollTop = chatContainer.scrollHeight;
-    }
-  </script>
+    </script>
 </body>
 </html>
