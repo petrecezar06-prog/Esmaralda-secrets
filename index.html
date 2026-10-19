@@ -2,168 +2,988 @@
 <html lang="ro">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Esmeralda Secrets</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Esmeralda Secrets — AI Virtual Assistant</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#121216">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #121212;
-            color: #ffffff;
+        :root {
+            --bg-color: #0f0f13;
+            --card-bg: #1a1a24;
+            --chat-user-bg: #6366f1;
+            --chat-bot-bg: #262636;
+            --accent-color: #818cf8;
+            --accent-hover: #6366f1;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --danger-color: #ef4444;
+            --success-color: #10b981;
+            --border-color: #2d2d3f;
+            --header-bg: rgba(22, 22, 32, 0.85);
+        }
+
+        * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
             display: flex;
             flex-direction: column;
             height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
         }
+
+        /* Header UI */
+        header {
+            background-color: var(--header-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 10;
+        }
+
+        .brand-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .avatar-container {
+            position: relative;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 2px solid var(--accent-color);
+            box-shadow: 0 0 10px rgba(129, 140, 248, 0.3);
+            flex-shrink: 0;
+        }
+
+        .avatar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .status-badge {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 10px;
+            height: 10px;
+            background-color: var(--success-color);
+            border-radius: 50%;
+            border: 2px solid var(--bg-color);
+        }
+
+        .brand-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .brand-subtitle {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .icon-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .icon-btn:hover {
+            background: var(--border-color);
+            color: var(--accent-color);
+        }
+
+        .icon-btn.active {
+            background: rgba(129, 140, 248, 0.2);
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+        }
+
+        /* Status Banner / Indicator */
+        #status-indicator {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: rgba(99, 102, 241, 0.15);
+            border-bottom: 1px solid rgba(129, 140, 248, 0.2);
+            font-size: 0.8rem;
+            color: var(--accent-color);
+        }
+
+        #status-indicator.active {
+            display: flex;
+        }
+
+        /* Sound waves animation */
+        .wave-container {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            height: 14px;
+        }
+
+        .wave-bar {
+            width: 3px;
+            height: 100%;
+            background-color: var(--accent-color);
+            border-radius: 3px;
+            animation: wave 1s ease-in-out infinite;
+        }
+
+        .wave-bar:nth-child(2) { animation-delay: 0.2s; }
+        .wave-bar:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes wave {
+            0%, 100% { transform: scaleY(0.3); }
+            50% { transform: scaleY(1); }
+        }
+
+        /* Chat Area */
         #chat-container {
             flex: 1;
             overflow-y: auto;
-            padding: 20px;
+            padding: 16px;
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 16px;
+            scroll-behavior: smooth;
         }
-        .message {
-            max-width: 75%;
-            padding: 12px 16px;
-            border-radius: 12px;
-            line-height: 1.4;
+
+        .message-row {
+            display: flex;
+            flex-direction: column;
+            max-width: 85%;
+            animation: fadeIn 0.25s ease-out;
         }
-        .user-message {
-            background-color: #6200ee;
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message-row.user {
             align-self: flex-end;
         }
-        .bot-message {
-            background-color: #333333;
+
+        .message-row.assistant {
             align-self: flex-start;
         }
-        .error-message {
-            background-color: #b00020;
+
+        .message-row.system {
             align-self: center;
+            max-width: 90%;
+        }
+
+        .message-bubble {
+            padding: 12px 16px;
+            border-radius: 16px;
+            line-height: 1.5;
+            font-size: 0.95rem;
+            word-break: break-word;
+            position: relative;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .user .message-bubble {
+            background: linear-gradient(135deg, var(--chat-user-bg), #4f46e5);
+            color: #ffffff;
+            border-bottom-right-radius: 4px;
+        }
+
+        .assistant .message-bubble {
+            background-color: var(--chat-bot-bg);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            border-bottom-left-radius: 4px;
+        }
+
+        .system .message-bubble {
+            background-color: rgba(239, 68, 68, 0.15);
+            border: 1px solid var(--danger-color);
+            color: #fca5a5;
             text-align: center;
+            font-size: 0.85rem;
         }
+
+        .message-time {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+            align-self: flex-end;
+        }
+
+        .user .message-time {
+            align-self: flex-end;
+        }
+
+        .assistant .message-time {
+            align-self: flex-start;
+        }
+
+        /* Typing indicator dots */
+        .typing-dots {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+        }
+
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            background-color: var(--accent-color);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+        /* Input Controls */
         #input-container {
+            background-color: var(--card-bg);
+            border-top: 1px solid var(--border-color);
+            padding: 12px 16px;
             display: flex;
-            padding: 15px;
-            background-color: #1e1e1e;
-            border-top: 1px solid #333;
+            align-items: center;
+            gap: 10px;
         }
-        #user-input {
+
+        .input-wrapper {
+            position: relative;
             flex: 1;
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid #444;
-            background-color: #2a2a2a;
-            color: white;
-            font-size: 16px;
+            display: flex;
+            align-items: center;
         }
-        #send-button {
-            background-color: #6200ee;
-            color: white;
+
+        #user-input {
+            width: 100%;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 12px 16px;
+            color: var(--text-main);
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        #user-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .action-btn {
+            background-color: var(--accent-color);
+            color: #ffffff;
             border: none;
-            padding: 0 20px;
-            margin-left: 10px;
-            border-radius: 8px;
-            font-size: 16px;
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+            box-shadow: 0 2px 10px rgba(99, 102, 241, 0.3);
+        }
+
+        .action-btn:hover {
+            background-color: var(--accent-hover);
+            transform: scale(1.04);
+        }
+
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .mic-btn {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+        }
+
+        .mic-btn.recording {
+            background-color: var(--danger-color);
+            color: #ffffff;
+            border-color: var(--danger-color);
+            animation: pulse-mic 1.2s infinite;
+        }
+
+        @keyframes pulse-mic {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        /* Modal Settings */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            padding: 16px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            width: 100%;
+            max-width: 450px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .modal-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
             cursor: pointer;
         }
-        #send-button:hover {
-            background-color: #7c4dff;
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .form-input {
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px;
+            color: var(--text-main);
+            font-size: 0.9rem;
+        }
+
+        .save-btn {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        /* SVG Icon Helpers */
+        .svg-icon {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
         }
     </style>
 </head>
 <body>
 
-    <div id="chat-container">
-        <div class="message bot-message">Salut! Sunt Esmeralda, inteligența ta personală. Cu ce te pot ajuta astăzi?</div>
+    <!-- Header -->
+    <header>
+        <div class="brand-container">
+            <div class="avatar-container">
+                <img src="icon.png" alt="Esmeralda Avatar" class="avatar-img" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'%23818cf8\'><circle cx=\'12\' cy=\'8\' r=\'4\'/><path d=\'M12 14c-6.1 0-8 4-8 4v2h16v-2s-1.9-4-8-4z\'/></svg>'">
+                <span class="status-badge"></span>
+            </div>
+            <div>
+                <div class="brand-title">Esmeralda Secrets</div>
+                <div class="brand-subtitle">Asistent AI Virtual Club</div>
+            </div>
+        </div>
+
+        <div class="header-actions">
+            <!-- Voice TTS Mute/Unmute toggle -->
+            <button id="tts-toggle-btn" class="icon-btn active" title="Comută Voce Esmeralda (TTS)">
+                <svg id="tts-icon-on" class="svg-icon" viewBox="0 0 24 24">
+                    <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                </svg>
+                <svg id="tts-icon-off" class="svg-icon" viewBox="0 0 24 24" style="display:none;">
+                    <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
+                </svg>
+            </button>
+
+            <!-- Clear Chat History -->
+            <button id="clear-btn" class="icon-btn" title="Șterge Istoric Conversație">
+                <svg class="svg-icon" viewBox="0 0 24 24">
+                    <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                </svg>
+            </button>
+
+            <!-- Settings Modal Trigger -->
+            <button id="settings-btn" class="icon-btn" title="Setări Endpoints">
+                <svg class="svg-icon" viewBox="0 0 24 24">
+                    <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Dynamic Status Bar -->
+    <div id="status-indicator">
+        <div class="wave-container">
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+        </div>
+        <span id="status-text">Esmeralda gândește...</span>
     </div>
 
+    <!-- Chat Message Container -->
+    <div id="chat-container">
+        <!-- Messages will be rendered here dynamically -->
+    </div>
+
+    <!-- Input Area -->
     <div id="input-container">
-        <input type="text" id="user-input" placeholder="Scrie un mesaj..." autocomplete="off">
-        <button id="send-button" onclick="sendMessage()">Trimite</button>
+        <!-- Microphone Button -->
+        <button id="mic-btn" class="action-btn mic-btn" title="Vorbește (Speech-to-Text)">
+            <svg class="svg-icon" viewBox="0 0 24 24">
+                <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+            </svg>
+        </button>
+
+        <div class="input-wrapper">
+            <input type="text" id="user-input" placeholder="Vorbește sau scrie un mesaj..." autocomplete="off">
+        </div>
+
+        <!-- Send Button -->
+        <button id="send-btn" class="action-btn" title="Trimite">
+            <svg class="svg-icon" viewBox="0 0 24 24">
+                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-title">
+                <span>Setări Aplicație</span>
+                <button class="close-btn" id="close-modal">&times;</button>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="setting-user-name">Numele Tău:</label>
+                <input type="text" id="setting-user-name" class="form-input" placeholder="Ex: Alexandru">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="setting-worker-url">Cloudflare Worker Endpoint URL:</label>
+                <input type="text" id="setting-worker-url" class="form-input" placeholder="https://nameless-block-036e.workers.dev">
+            </div>
+            <button id="save-settings" class="save-btn">Salvează Setările</button>
+        </div>
     </div>
 
     <script>
-        // ADRESA TA EXACTĂ DE CLOUDFLARE WORKER (cu subdomeniul tău personal)
-        const WORKER_URL = "https://nameless-block-036e.petre-cezar06.workers.dev";
+        // --- CONSTANTS & STATE ---
+        const DEFAULT_WORKER_URL = "https://nameless-block-036e.workers.dev";
+        const STORAGE_KEY_HISTORY = "esmeralda_chat_history";
+        const STORAGE_KEY_SETTINGS = "esmeralda_settings";
 
+        let settings = {
+            workerUrl: DEFAULT_WORKER_URL,
+            userName: "",
+            ttsEnabled: true
+        };
+
+        let chatHistory = [];
+        let recognition = null;
+        let isListening = false;
+        let isGenerating = false;
+        let currentUtterance = null;
+
+        // DOM Elements
         const chatContainer = document.getElementById("chat-container");
         const userInput = document.getElementById("user-input");
+        const sendBtn = document.getElementById("send-btn");
+        const micBtn = document.getElementById("mic-btn");
+        const ttsToggleBtn = document.getElementById("tts-toggle-btn");
+        const ttsIconOn = document.getElementById("tts-icon-on");
+        const ttsIconOff = document.getElementById("tts-icon-off");
+        const clearBtn = document.getElementById("clear-btn");
+        const settingsBtn = document.getElementById("settings-btn");
+        const settingsModal = document.getElementById("settings-modal");
+        const closeModalBtn = document.getElementById("close-modal");
+        const saveSettingsBtn = document.getElementById("save-settings");
+        const settingWorkerUrl = document.getElementById("setting-worker-url");
+        const settingUserName = document.getElementById("setting-user-name");
+        const statusIndicator = document.getElementById("status-indicator");
+        const statusText = document.getElementById("status-text");
 
-        userInput.addEventListener("keypress", function(event) {
-            if (event.key === "Enter") {
-                sendMessage();
+        // --- INIT ---
+        function init() {
+            loadSettings();
+            loadHistory();
+            initSpeechRecognition();
+            setupEventListeners();
+
+            if (chatHistory.length === 0) {
+                const initialGreeting = settings.userName
+                    ? `Salut, ${settings.userName}! Sunt Esmeralda, asistentul tău personal. Cu ce te pot ajuta astăzi?`
+                    : "Salut! Sunt Esmeralda, inteligența ta personală. Cu ce te pot ajuta astăzi?";
+                addMessage("assistant", initialGreeting, false);
+            } else {
+                renderHistory();
             }
-        });
+        }
 
-        async function sendMessage() {
-            const text = userInput.value.trim();
-            if (!text) return;
+        // --- SETTINGS MANAGEMENT ---
+        function loadSettings() {
+            const saved = localStorage.getItem(STORAGE_KEY_SETTINGS);
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    settings = { ...settings, ...parsed };
+                } catch (e) {
+                    console.error("Failed to parse settings:", e);
+                }
+            }
+            if (!settings.workerUrl || settings.workerUrl.trim() === "") {
+                settings.workerUrl = DEFAULT_WORKER_URL;
+            }
+            updateTtsUi();
+        }
 
-            // Afișează mesajul utilizatorului în chat
-            appendMessage(text, "user-message");
-            userInput.value = "";
+        function saveSettings() {
+            settings.workerUrl = settingWorkerUrl.value.trim() || DEFAULT_WORKER_URL;
+            settings.userName = settingUserName.value.trim();
+            localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings));
+            settingsModal.classList.remove("active");
+        }
+
+        // --- HISTORY MANAGEMENT ---
+        function loadHistory() {
+            const saved = localStorage.getItem(STORAGE_KEY_HISTORY);
+            if (saved) {
+                try {
+                    chatHistory = JSON.parse(saved);
+                } catch (e) {
+                    console.error("Failed to load history:", e);
+                    chatHistory = [];
+                }
+            }
+        }
+
+        function saveHistory() {
+            localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(chatHistory));
+        }
+
+        function renderHistory() {
+            chatContainer.innerHTML = "";
+            chatHistory.forEach(msg => {
+                appendMessageUI(msg.role, msg.content, msg.timestamp, false);
+            });
+            scrollToBottom();
+        }
+
+        function clearHistory() {
+            if (confirm("Sigur dorești să ștergi istoricul conversației?")) {
+                chatHistory = [];
+                saveHistory();
+                renderHistory();
+                const welcomeMsg = "Istoricul a fost șters. Cu ce te pot ajuta acum?";
+                addMessage("assistant", welcomeMsg, true);
+            }
+        }
+
+        // --- UI HELPER FUNCTIONS ---
+        function scrollToBottom() {
             chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
 
-            // Indicator de încărcare temporar
-            const loadingId = appendMessage("Se gândește...", "bot-message");
+        function setStatus(active, text = "") {
+            if (active) {
+                statusText.innerText = text;
+                statusIndicator.classList.add("active");
+            } else {
+                statusIndicator.classList.remove("active");
+            }
+        }
+
+        function appendMessageUI(role, text, timestamp = null, isLive = false) {
+            const rowDiv = document.createElement("div");
+            rowDiv.className = `message-row ${role}`;
+
+            const bubbleDiv = document.createElement("div");
+            bubbleDiv.className = "message-bubble";
+            bubbleDiv.innerText = text;
+
+            const timeDiv = document.createElement("div");
+            timeDiv.className = "message-time";
+            const dateObj = timestamp ? new Date(timestamp) : new Date();
+            timeDiv.innerText = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            rowDiv.appendChild(bubbleDiv);
+            rowDiv.appendChild(timeDiv);
+
+            if (isLive) {
+                const liveId = "live-msg-" + Date.now();
+                rowDiv.id = liveId;
+                chatContainer.appendChild(rowDiv);
+                scrollToBottom();
+                return liveId;
+            }
+
+            chatContainer.appendChild(rowDiv);
+            scrollToBottom();
+        }
+
+        function addMessage(role, content, speak = true) {
+            const timestamp = Date.now();
+            chatHistory.push({ role, content, timestamp });
+            saveHistory();
+            appendMessageUI(role, content, timestamp, false);
+
+            if (role === "assistant" && speak && settings.ttsEnabled) {
+                speakText(content);
+            }
+        }
+
+        // --- SPEECH RECOGNITION (STT) ---
+        function initSpeechRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                micBtn.style.display = "none";
+                console.warn("Web Speech API (SpeechRecognition) nu este suportat în acest browser.");
+                return;
+            }
+
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = true;
+            recognition.lang = "ro-RO";
+
+            recognition.onstart = function() {
+                isListening = true;
+                micBtn.classList.add("recording");
+                setStatus(true, "Esmeralda te ascultă...");
+            };
+
+            recognition.onresult = function(event) {
+                let transcript = "";
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    transcript += event.results[i][0].transcript;
+                }
+                userInput.value = transcript;
+            };
+
+            recognition.onerror = function(event) {
+                console.error("Speech recognition error:", event.error);
+                stopListening();
+                setStatus(false);
+            };
+
+            recognition.onend = function() {
+                stopListening();
+                setStatus(false);
+                // If there is recognized text, send automatically
+                if (userInput.value.trim().length > 0) {
+                    handleUserSend();
+                }
+            };
+        }
+
+        function toggleListening() {
+            if (!recognition) return;
+            if (isListening) {
+                recognition.stop();
+            } else {
+                try {
+                    // Stop any ongoing speech synthesis when user talks
+                    window.speechSynthesis.cancel();
+                    recognition.start();
+                } catch (e) {
+                    console.error("Failed to start speech recognition:", e);
+                }
+            }
+        }
+
+        function stopListening() {
+            isListening = false;
+            micBtn.classList.remove("recording");
+        }
+
+        // --- TEXT-TO-SPEECH (TTS) ---
+        function updateTtsUi() {
+            if (settings.ttsEnabled) {
+                ttsToggleBtn.classList.add("active");
+                ttsIconOn.style.display = "block";
+                ttsIconOff.style.display = "none";
+            } else {
+                ttsToggleBtn.classList.remove("active");
+                ttsIconOn.style.display = "none";
+                ttsIconOff.style.display = "block";
+                window.speechSynthesis.cancel();
+            }
+        }
+
+        function toggleTts() {
+            settings.ttsEnabled = !settings.ttsEnabled;
+            updateTtsUi();
+            saveSettings();
+        }
+
+        function speakText(text) {
+            if (!('speechSynthesis' in window) || !settings.ttsEnabled) return;
+            window.speechSynthesis.cancel();
+
+            // Clean text from markdown formatting or tags
+            const cleanText = text.replace(/[*_#`~]/g, '').trim();
+            if (!cleanText) return;
+
+            currentUtterance = new SpeechSynthesisUtterance(cleanText);
+            currentUtterance.lang = "ro-RO";
+            currentUtterance.rate = 1.0;
+            currentUtterance.pitch = 1.0;
+
+            // Try selecting a female or natural Romanian/English voice
+            const voices = window.speechSynthesis.getVoices();
+            const roVoice = voices.find(v => v.lang.includes("ro") && (v.name.toLowerCase().includes("female") || v.name.toLowerCase().includes("ioana") || v.name.toLowerCase().includes("alina"))) ||
+                            voices.find(v => v.lang.includes("ro")) ||
+                            voices.find(v => v.lang.includes("en") && (v.name.toLowerCase().includes("female") || v.name.toLowerCase().includes("zira") || v.name.toLowerCase().includes("samantha")));
+
+            if (roVoice) {
+                currentUtterance.voice = roVoice;
+            }
+
+            currentUtterance.onstart = function() {
+                setStatus(true, "Esmeralda vorbește...");
+            };
+
+            currentUtterance.onend = function() {
+                setStatus(false);
+            };
+
+            currentUtterance.onerror = function() {
+                setStatus(false);
+            };
+
+            window.speechSynthesis.speak(currentUtterance);
+        }
+
+        // --- MAIN SEND / STREAMING LOGIC ---
+        async function handleUserSend() {
+            const text = userInput.value.trim();
+            if (!text || isGenerating) return;
+
+            // Stop speech synthesis if playing
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+
+            userInput.value = "";
+            addMessage("user", text, false);
+
+            isGenerating = true;
+            sendBtn.disabled = true;
+            setStatus(true, "Esmeralda gândește...");
+
+            // Create temporary streaming assistant message UI
+            const liveMsgRowId = appendMessageUI("assistant", "...", null, true);
+            const liveRowElem = document.getElementById(liveMsgRowId);
+            const liveBubbleElem = liveRowElem ? liveRowElem.querySelector(".message-bubble") : null;
+
+            let accumulatedText = "";
+            let targetEndpoint = settings.workerUrl || DEFAULT_WORKER_URL;
+
+            // Build request messages history
+            const apiMessages = chatHistory.map(m => ({ role: m.role, content: m.content }));
 
             try {
-                const response = await fetch(WORKER_URL, {
+                const response = await fetch(targetEndpoint, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
                     },
                     body: JSON.stringify({
-                        model: "openai/gpt-3.5-turbo",
-                        messages: [
-                            { role: "system", content: "Ești Esmeralda, un asistent virtual inteligent și prietenos care răspunde în limba română." },
-                            { role: "user", content: text }
-                        ]
+                        stream: true,
+                        messages: apiMessages
                     })
                 });
 
-                // Elimină mesajul de încărcare
-                document.getElementById(loadingId).remove();
-
                 if (!response.ok) {
-                    throw new Error(`Eroare HTTP: ${response.status}`);
+                    throw new Error(`Eroare HTTP (${response.status})`);
                 }
 
-                const data = await response.json();
-                
-                // Extrage răspunsul de la modelul AI (OpenRouter / OpenAI format)
-                let reply = "Nu am primit un răspuns valid.";
-                if (data.choices && data.choices.length > 0) {
-                    reply = data.choices[0].message.content;
-                } else if (data.error) {
-                    reply = `Eroare server: ${data.error.message || data.error}`;
+                // Check if response is stream or JSON fallback
+                const contentType = response.headers.get("Content-Type") || "";
+
+                if (contentType.includes("text/event-stream") && response.body) {
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder("utf-8");
+                    let buffer = "";
+
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+
+                        buffer += decoder.decode(value, { stream: true });
+                        const lines = buffer.split("\n");
+                        buffer = lines.pop(); // keep partial line in buffer
+
+                        for (const line of lines) {
+                            const trimmed = line.trim();
+                            if (trimmed.startsWith("data: ")) {
+                                const dataStr = trimmed.slice(6);
+                                if (dataStr === "[DONE]") break;
+                                try {
+                                    const parsed = JSON.parse(dataStr);
+                                    const contentChunk = parsed.choices?.[0]?.delta?.content || parsed.choices?.[0]?.text || "";
+                                    if (contentChunk) {
+                                        accumulatedText += contentChunk;
+                                        if (liveBubbleElem) liveBubbleElem.innerText = accumulatedText;
+                                        scrollToBottom();
+                                    }
+                                } catch (err) {
+                                    // Ignore json parse error on line chunks
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    // Non-streaming JSON response fallback
+                    const data = await response.json();
+                    accumulatedText = data.reply || data.response || (data.choices?.[0]?.message?.content) || "Nu am primit un răspuns valid.";
+                    if (liveBubbleElem) liveBubbleElem.innerText = accumulatedText;
                 }
 
-                appendMessage(reply, "bot-message");
+                if (!accumulatedText) {
+                    accumulatedText = "Nu am primit niciun răspuns de la server.";
+                    if (liveBubbleElem) liveBubbleElem.innerText = accumulatedText;
+                }
+
+                // Save final accumulated message in chat history
+                if (liveRowElem) liveRowElem.remove();
+                addMessage("assistant", accumulatedText, true);
 
             } catch (error) {
-                // Elimină mesajul de încărcare dacă a eșuat
-                const loadingElem = document.getElementById(loadingId);
-                if (loadingElem) loadingElem.remove();
+                console.error("Error communicating with worker:", error);
+                if (liveRowElem) liveRowElem.remove();
 
-                console.error("Eroare fetch:", error);
-                appendMessage(`Eroare conexiune: Nu s-a putut comunica cu serverul (${WORKER_URL}). Verifică publicarea Cloudflare Worker. (${error.message})`, "error-message");
+                const errorText = `Eroare conexiune: Nu s-a putut comunica cu serverul (${targetEndpoint}). Details: ${error.message}`;
+                appendMessageUI("system", errorText, Date.now(), false);
+            } finally {
+                isGenerating = false;
+                sendBtn.disabled = false;
+                setStatus(false);
             }
-
-            chatContainer.scrollTop = chatContainer.scrollHeight;
         }
 
-        function appendMessage(text, className) {
-            const messageDiv = document.createElement("div");
-            messageDiv.className = `message ${className}`;
-            messageDiv.innerText = text;
-            const id = "msg-" + Date.now() + "-" + Math.random();
-            messageDiv.id = id;
-            chatContainer.appendChild(messageDiv);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-            return id;
+        // --- EVENT LISTENERS ---
+        function setupEventListeners() {
+            sendBtn.addEventListener("click", handleUserSend);
+
+            userInput.addEventListener("keypress", function(e) {
+                if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleUserSend();
+                }
+            });
+
+            micBtn.addEventListener("click", toggleListening);
+            ttsToggleBtn.addEventListener("click", toggleTts);
+            clearBtn.addEventListener("click", clearHistory);
+
+            settingsBtn.addEventListener("click", () => {
+                settingWorkerUrl.value = settings.workerUrl || DEFAULT_WORKER_URL;
+                settingUserName.value = settings.userName || "";
+                settingsModal.classList.add("active");
+            });
+
+            closeModalBtn.addEventListener("click", () => {
+                settingsModal.classList.remove("active");
+            });
+
+            saveSettingsBtn.addEventListener("click", saveSettings);
+
+            settingsModal.addEventListener("click", (e) => {
+                if (e.target === settingsModal) {
+                    settingsModal.classList.remove("active");
+                }
+            });
+
+            // Pre-load voices for SpeechSynthesis
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.onvoiceschanged = function() {
+                    window.speechSynthesis.getVoices();
+                };
+            }
         }
+
+        // Initialize application on DOM ready
+        document.addEventListener("DOMContentLoaded", init);
     </script>
 </body>
 </html>
