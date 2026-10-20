@@ -46,7 +46,7 @@
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--border-color);
-            padding: 12px 16px;
+            padding: 10px 14px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -56,13 +56,13 @@
         .brand-container {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
         }
 
         .avatar-container {
             position: relative;
-            width: 42px;
-            height: 42px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             overflow: hidden;
             border: 2px solid var(--accent-color);
@@ -88,7 +88,7 @@
         }
 
         .brand-title {
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: 700;
             letter-spacing: 0.5px;
             color: #ffffff;
@@ -98,28 +98,45 @@
         }
 
         .brand-subtitle {
-            font-size: 0.75rem;
+            font-size: 0.72rem;
             color: var(--text-muted);
         }
 
         .header-actions {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
+        }
+
+        .lang-select-header {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            border-radius: 8px;
+            padding: 6px 8px;
+            font-size: 0.8rem;
+            outline: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .lang-select-header:hover, .lang-select-header:focus {
+            border-color: var(--accent-color);
         }
 
         .icon-btn {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
             color: var(--text-main);
-            width: 40px;
-            height: 40px;
+            width: 38px;
+            height: 38px;
             border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             transition: all 0.2s ease;
+            flex-shrink: 0;
         }
 
         .icon-btn:hover {
@@ -241,19 +258,46 @@
             font-size: 0.85rem;
         }
 
+        .message-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-top: 4px;
+            padding: 0 4px;
+        }
+
         .message-time {
             font-size: 0.7rem;
             color: var(--text-muted);
-            margin-top: 4px;
-            align-self: flex-end;
         }
 
-        .user .message-time {
-            align-self: flex-end;
+        .read-aloud-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 2px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s ease, transform 0.2s ease;
         }
 
-        .assistant .message-time {
-            align-self: flex-start;
+        .read-aloud-btn:hover {
+            color: var(--accent-color);
+            transform: scale(1.1);
+        }
+
+        .read-aloud-btn.speaking {
+            color: var(--accent-color);
+            animation: pulse-speaker 1s infinite alternate;
+        }
+
+        @keyframes pulse-speaker {
+            0% { transform: scale(1); opacity: 0.8; }
+            100% { transform: scale(1.25); opacity: 1; }
         }
 
         /* Typing indicator dots */
@@ -446,6 +490,12 @@
             height: 20px;
             fill: currentColor;
         }
+
+        .svg-icon-sm {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
     </style>
 </head>
 <body>
@@ -464,6 +514,16 @@
         </div>
 
         <div class="header-actions">
+            <!-- Language Selection Dropdown -->
+            <select id="header-lang-select" class="lang-select-header" title="Selectează Limba / Select Language">
+                <option value="ro-RO">🇷🇴 RO</option>
+                <option value="en-US">🇺🇸 EN</option>
+                <option value="fr-FR">🇫🇷 FR</option>
+                <option value="de-DE">🇩🇪 DE</option>
+                <option value="es-ES">🇪🇸 ES</option>
+                <option value="it-IT">🇮🇹 IT</option>
+            </select>
+
             <!-- Voice TTS Mute/Unmute toggle -->
             <button id="tts-toggle-btn" class="icon-btn active" title="Comută Voce Esmeralda (TTS)">
                 <svg id="tts-icon-on" class="svg-icon" viewBox="0 0 24 24">
@@ -539,6 +599,17 @@
                 <input type="text" id="setting-user-name" class="form-input" placeholder="Ex: Alexandru">
             </div>
             <div class="form-group">
+                <label class="form-label" for="setting-language">Limbă &amp; Voce (STT / TTS):</label>
+                <select id="setting-language" class="form-input">
+                    <option value="ro-RO">Română (ro-RO)</option>
+                    <option value="en-US">English (en-US)</option>
+                    <option value="fr-FR">Français (fr-FR)</option>
+                    <option value="de-DE">Deutsch (de-DE)</option>
+                    <option value="es-ES">Español (es-ES)</option>
+                    <option value="it-IT">Italiano (it-IT)</option>
+                </select>
+            </div>
+            <div class="form-group">
                 <label class="form-label" for="setting-worker-url">Cloudflare Worker Endpoint URL:</label>
                 <input type="text" id="setting-worker-url" class="form-input" placeholder="https://nameless-block-036e.workers.dev">
             </div>
@@ -555,14 +626,15 @@
         let settings = {
             workerUrl: DEFAULT_WORKER_URL,
             userName: "",
-            ttsEnabled: true
+            ttsEnabled: true,
+            language: "ro-RO"
         };
 
         let chatHistory = [];
         let recognition = null;
         let isListening = false;
         let isGenerating = false;
-        let currentUtterance = null;
+        let activeSpeakerBtn = null;
 
         // DOM Elements
         const chatContainer = document.getElementById("chat-container");
@@ -572,6 +644,7 @@
         const ttsToggleBtn = document.getElementById("tts-toggle-btn");
         const ttsIconOn = document.getElementById("tts-icon-on");
         const ttsIconOff = document.getElementById("tts-icon-off");
+        const headerLangSelect = document.getElementById("header-lang-select");
         const clearBtn = document.getElementById("clear-btn");
         const settingsBtn = document.getElementById("settings-btn");
         const settingsModal = document.getElementById("settings-modal");
@@ -579,8 +652,19 @@
         const saveSettingsBtn = document.getElementById("save-settings");
         const settingWorkerUrl = document.getElementById("setting-worker-url");
         const settingUserName = document.getElementById("setting-user-name");
+        const settingLanguage = document.getElementById("setting-language");
         const statusIndicator = document.getElementById("status-indicator");
         const statusText = document.getElementById("status-text");
+
+        // GREETINGS BY LANGUAGE
+        const GREETINGS = {
+            "ro-RO": "Salut! Sunt Esmeralda, inteligența ta personală. Cu ce te pot ajuta astăzi?",
+            "en-US": "Hello! I am Esmeralda, your personal AI assistant. How can I help you today?",
+            "fr-FR": "Bonjour! Je suis Esmeralda, votre assistante IA personnelle. Comment puis-je vous aider aujourd'hui?",
+            "de-DE": "Hallo! Ich bin Esmeralda, Ihre persönliche KI-Assistentin. Wie kann ich Ihnen heute helfen?",
+            "es-ES": "¡Hola! Soy Esmeralda, tu asistente personal de IA. ¿En qué puedo ayudarte hoy?",
+            "it-IT": "Ciao! Sono Esmeralda, la tua assistente IA personale. Come posso aiutarti oggi?"
+        };
 
         // --- INIT ---
         function init() {
@@ -590,10 +674,10 @@
             setupEventListeners();
 
             if (chatHistory.length === 0) {
-                const initialGreeting = settings.userName
-                    ? `Salut, ${settings.userName}! Sunt Esmeralda, asistentul tău personal. Cu ce te pot ajuta astăzi?`
-                    : "Salut! Sunt Esmeralda, inteligența ta personală. Cu ce te pot ajuta astăzi?";
-                addMessage("assistant", initialGreeting, false);
+                const welcomeMsg = settings.userName
+                    ? (settings.language === "en-US" ? `Hello, ${settings.userName}! I am Esmeralda.` : `Salut, ${settings.userName}! Sunt Esmeralda, asistentul tău personal. Cu ce te pot ajuta astăzi?`)
+                    : (GREETINGS[settings.language] || GREETINGS["ro-RO"]);
+                addMessage("assistant", welcomeMsg, false);
             } else {
                 renderHistory();
             }
@@ -613,14 +697,34 @@
             if (!settings.workerUrl || settings.workerUrl.trim() === "") {
                 settings.workerUrl = DEFAULT_WORKER_URL;
             }
+            if (!settings.language) {
+                settings.language = "ro-RO";
+            }
+            if (headerLangSelect) headerLangSelect.value = settings.language;
+            if (settingLanguage) settingLanguage.value = settings.language;
             updateTtsUi();
         }
 
         function saveSettings() {
             settings.workerUrl = settingWorkerUrl.value.trim() || DEFAULT_WORKER_URL;
             settings.userName = settingUserName.value.trim();
+            settings.language = settingLanguage.value || "ro-RO";
+            if (headerLangSelect) headerLangSelect.value = settings.language;
             localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings));
+            if (recognition) {
+                recognition.lang = settings.language;
+            }
             settingsModal.classList.remove("active");
+        }
+
+        function changeLanguage(newLang) {
+            settings.language = newLang;
+            if (headerLangSelect) headerLangSelect.value = newLang;
+            if (settingLanguage) settingLanguage.value = newLang;
+            localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings));
+            if (recognition) {
+                recognition.lang = newLang;
+            }
         }
 
         // --- HISTORY MANAGEMENT ---
@@ -649,11 +753,16 @@
         }
 
         function clearHistory() {
-            if (confirm("Sigur dorești să ștergi istoricul conversației?")) {
+            const confirmMsg = settings.language === "en-US"
+                ? "Are you sure you want to clear conversation history?"
+                : "Sigur dorești să ștergi istoricul conversației?";
+            if (confirm(confirmMsg)) {
                 chatHistory = [];
                 saveHistory();
                 renderHistory();
-                const welcomeMsg = "Istoricul a fost șters. Cu ce te pot ajuta acum?";
+                const welcomeMsg = settings.language === "en-US"
+                    ? "History cleared. How can I help you now?"
+                    : "Istoricul a fost șters. Cu ce te pot ajuta acum?";
                 addMessage("assistant", welcomeMsg, true);
             }
         }
@@ -672,6 +781,16 @@
             }
         }
 
+        function cancelActiveAudio() {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+            if (activeSpeakerBtn) {
+                activeSpeakerBtn.classList.remove("speaking");
+                activeSpeakerBtn = null;
+            }
+        }
+
         function appendMessageUI(role, text, timestamp = null, isLive = false) {
             const rowDiv = document.createElement("div");
             rowDiv.className = `message-row ${role}`;
@@ -680,13 +799,47 @@
             bubbleDiv.className = "message-bubble";
             bubbleDiv.innerText = text;
 
+            const footerDiv = document.createElement("div");
+            footerDiv.className = "message-footer";
+
             const timeDiv = document.createElement("div");
             timeDiv.className = "message-time";
             const dateObj = timestamp ? new Date(timestamp) : new Date();
             timeDiv.innerText = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
+            footerDiv.appendChild(timeDiv);
+
+            // Add individual Read Aloud button for assistant and user messages
+            if (!isLive && (role === "assistant" || role === "user")) {
+                const readBtn = document.createElement("button");
+                readBtn.className = "read-aloud-btn";
+                readBtn.title = settings.language === "en-US" ? "Read aloud" : "Citește cu voce tare";
+                readBtn.innerHTML = `
+                    <svg class="svg-icon-sm" viewBox="0 0 24 24">
+                        <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
+                    </svg>
+                `;
+
+                readBtn.addEventListener("click", () => {
+                    if (readBtn.classList.contains("speaking")) {
+                        cancelActiveAudio();
+                        setStatus(false);
+                    } else {
+                        cancelActiveAudio();
+                        readBtn.classList.add("speaking");
+                        activeSpeakerBtn = readBtn;
+                        speakText(text, settings.language, () => {
+                            readBtn.classList.remove("speaking");
+                            if (activeSpeakerBtn === readBtn) activeSpeakerBtn = null;
+                        });
+                    }
+                });
+
+                footerDiv.appendChild(readBtn);
+            }
+
             rowDiv.appendChild(bubbleDiv);
-            rowDiv.appendChild(timeDiv);
+            rowDiv.appendChild(footerDiv);
 
             if (isLive) {
                 const liveId = "live-msg-" + Date.now();
@@ -707,7 +860,7 @@
             appendMessageUI(role, content, timestamp, false);
 
             if (role === "assistant" && speak && settings.ttsEnabled) {
-                speakText(content);
+                speakText(content, settings.language);
             }
         }
 
@@ -715,7 +868,6 @@
         function initSpeechRecognition() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (!SpeechRecognition) {
-                micBtn.style.display = "none";
                 console.warn("Web Speech API (SpeechRecognition) nu este suportat în acest browser.");
                 return;
             }
@@ -723,12 +875,13 @@
             recognition = new SpeechRecognition();
             recognition.continuous = false;
             recognition.interimResults = true;
-            recognition.lang = "ro-RO";
+            recognition.lang = settings.language || "ro-RO";
 
             recognition.onstart = function() {
                 isListening = true;
                 micBtn.classList.add("recording");
-                setStatus(true, "Esmeralda te ascultă...");
+                const listenMsg = settings.language === "en-US" ? "Esmeralda is listening..." : "Esmeralda te ascultă...";
+                setStatus(true, listenMsg);
             };
 
             recognition.onresult = function(event) {
@@ -742,7 +895,18 @@
             recognition.onerror = function(event) {
                 console.error("Speech recognition error:", event.error);
                 stopListening();
-                setStatus(false);
+                let errorNotice = "Eroare la recunoașterea vocală.";
+                if (event.error === 'not-allowed' || event.error === 'permission-denied') {
+                    errorNotice = settings.language === "en-US"
+                        ? "Microphone access denied. Please grant permission."
+                        : "Accesul la microfon a fost refuzat. Permite accesul din setări.";
+                } else if (event.error === 'no-speech') {
+                    errorNotice = settings.language === "en-US" ? "No speech detected." : "Nu s-a auzit nicio voce. Încearcă din nou.";
+                } else if (event.error === 'audio-capture') {
+                    errorNotice = settings.language === "en-US" ? "No working microphone found." : "Nu s-a găsit niciun microfon activ.";
+                }
+                setStatus(true, errorNotice);
+                setTimeout(() => setStatus(false), 3500);
             };
 
             recognition.onend = function() {
@@ -756,13 +920,25 @@
         }
 
         function toggleListening() {
-            if (!recognition) return;
+            cancelActiveAudio();
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                const unsupportedNotice = settings.language === "en-US"
+                    ? "Speech recognition is not supported in this browser."
+                    : "Recunoașterea vocală nu este suportată în acest browser.";
+                alert(unsupportedNotice);
+                return;
+            }
+
+            if (!recognition) {
+                initSpeechRecognition();
+            }
+
             if (isListening) {
                 recognition.stop();
             } else {
                 try {
-                    // Stop any ongoing speech synthesis when user talks
-                    window.speechSynthesis.cancel();
+                    recognition.lang = settings.language || "ro-RO";
                     recognition.start();
                 } catch (e) {
                     console.error("Failed to start speech recognition:", e);
@@ -785,7 +961,7 @@
                 ttsToggleBtn.classList.remove("active");
                 ttsIconOn.style.display = "none";
                 ttsIconOff.style.display = "block";
-                window.speechSynthesis.cancel();
+                cancelActiveAudio();
             }
         }
 
@@ -795,42 +971,75 @@
             saveSettings();
         }
 
-        function speakText(text) {
-            if (!('speechSynthesis' in window) || !settings.ttsEnabled) return;
-            window.speechSynthesis.cancel();
-
-            // Clean text from markdown formatting or tags
-            const cleanText = text.replace(/[*_#`~]/g, '').trim();
-            if (!cleanText) return;
-
-            currentUtterance = new SpeechSynthesisUtterance(cleanText);
-            currentUtterance.lang = "ro-RO";
-            currentUtterance.rate = 1.0;
-            currentUtterance.pitch = 1.0;
-
-            // Try selecting a female or natural Romanian/English voice
+        function getBestVoice(lang) {
+            if (!('speechSynthesis' in window)) return null;
             const voices = window.speechSynthesis.getVoices();
-            const roVoice = voices.find(v => v.lang.includes("ro") && (v.name.toLowerCase().includes("female") || v.name.toLowerCase().includes("ioana") || v.name.toLowerCase().includes("alina"))) ||
-                            voices.find(v => v.lang.includes("ro")) ||
-                            voices.find(v => v.lang.includes("en") && (v.name.toLowerCase().includes("female") || v.name.toLowerCase().includes("zira") || v.name.toLowerCase().includes("samantha")));
+            if (!voices || voices.length === 0) return null;
 
-            if (roVoice) {
-                currentUtterance.voice = roVoice;
+            const targetLang = (lang || settings.language || "ro-RO").toLowerCase();
+            const prefix = targetLang.split('-')[0];
+
+            // Filter voices matching target language or language prefix
+            const matchedVoices = voices.filter(v => {
+                const vLang = v.lang.replace('_', '-').toLowerCase();
+                return vLang === targetLang || vLang.startsWith(prefix);
+            });
+
+            if (matchedVoices.length > 0) {
+                // Prefer natural or female voices
+                const femaleOrNatural = matchedVoices.find(v => {
+                    const name = v.name.toLowerCase();
+                    return name.includes("female") || name.includes("natural") || name.includes("ioana") || name.includes("alina") || name.includes("zira") || name.includes("samantha") || name.includes("google");
+                });
+                return femaleOrNatural || matchedVoices[0];
             }
 
-            currentUtterance.onstart = function() {
-                setStatus(true, "Esmeralda vorbește...");
+            // Fallback to any English or standard voice
+            return voices.find(v => v.lang.toLowerCase().includes("en")) || voices[0] || null;
+        }
+
+        function speakText(text, lang = "ro-RO", onEndCallback = null) {
+            if (!('speechSynthesis' in window) || !settings.ttsEnabled) {
+                if (onEndCallback) onEndCallback();
+                return;
+            }
+
+            cancelActiveAudio();
+
+            // Clean text from markdown formatting or special symbols
+            const cleanText = text.replace(/[*_#`~]/g, '').trim();
+            if (!cleanText) {
+                if (onEndCallback) onEndCallback();
+                return;
+            }
+
+            const utterance = new SpeechSynthesisUtterance(cleanText);
+            const targetLang = lang || settings.language || "ro-RO";
+            utterance.lang = targetLang;
+            utterance.rate = 1.0;
+            utterance.pitch = 1.0;
+
+            const chosenVoice = getBestVoice(targetLang);
+            if (chosenVoice) {
+                utterance.voice = chosenVoice;
+            }
+
+            utterance.onstart = function() {
+                const speakingMsg = targetLang === "en-US" ? "Esmeralda is speaking..." : "Esmeralda vorbește...";
+                setStatus(true, speakingMsg);
             };
 
-            currentUtterance.onend = function() {
+            utterance.onend = function() {
                 setStatus(false);
+                if (onEndCallback) onEndCallback();
             };
 
-            currentUtterance.onerror = function() {
+            utterance.onerror = function() {
                 setStatus(false);
+                if (onEndCallback) onEndCallback();
             };
 
-            window.speechSynthesis.speak(currentUtterance);
+            window.speechSynthesis.speak(utterance);
         }
 
         // --- MAIN SEND / STREAMING LOGIC ---
@@ -838,17 +1047,15 @@
             const text = userInput.value.trim();
             if (!text || isGenerating) return;
 
-            // Stop speech synthesis if playing
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-            }
+            cancelActiveAudio();
 
             userInput.value = "";
             addMessage("user", text, false);
 
             isGenerating = true;
             sendBtn.disabled = true;
-            setStatus(true, "Esmeralda gândește...");
+            const thinkMsg = settings.language === "en-US" ? "Esmeralda is thinking..." : "Esmeralda gândește...";
+            setStatus(true, thinkMsg);
 
             // Create temporary streaming assistant message UI
             const liveMsgRowId = appendMessageUI("assistant", "...", null, true);
@@ -956,9 +1163,22 @@
             ttsToggleBtn.addEventListener("click", toggleTts);
             clearBtn.addEventListener("click", clearHistory);
 
+            if (headerLangSelect) {
+                headerLangSelect.addEventListener("change", (e) => {
+                    changeLanguage(e.target.value);
+                });
+            }
+
+            if (settingLanguage) {
+                settingLanguage.addEventListener("change", (e) => {
+                    changeLanguage(e.target.value);
+                });
+            }
+
             settingsBtn.addEventListener("click", () => {
                 settingWorkerUrl.value = settings.workerUrl || DEFAULT_WORKER_URL;
                 settingUserName.value = settings.userName || "";
+                settingLanguage.value = settings.language || "ro-RO";
                 settingsModal.classList.add("active");
             });
 
