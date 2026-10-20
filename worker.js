@@ -6,7 +6,7 @@
 function getCorsHeaders(request) {
   const origin = (request && request.headers && typeof request.headers.get === "function" && request.headers.get("Origin")) || "*";
   return {
-    "Access-Control-Allow-Origin": origin === "null" ? "*" : origin,
+    "Access-Control-Allow-Origin": origin === "null" || !origin ? "*" : origin,
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, Accept",
     "Access-Control-Max-Age": "86400",
