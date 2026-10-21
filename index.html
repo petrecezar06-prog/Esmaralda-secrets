@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Esmeralda Secrets — AI Virtual Assistant</title>
+    <link rel="icon" type="image/png" href="avatar-esmeralda.png">
+    <link rel="apple-touch-icon" href="avatar-esmeralda.png">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#121216">
     <style>
@@ -51,18 +53,21 @@
             align-items: center;
             justify-content: space-between;
             z-index: 10;
+            gap: 8px;
         }
 
         .brand-container {
             display: flex;
             align-items: center;
             gap: 10px;
+            min-width: 0;
+            flex: 1;
         }
 
         .avatar-container {
             position: relative;
-            width: 40px;
-            height: 40px;
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
             overflow: hidden;
             border: 2px solid var(--accent-color);
@@ -71,8 +76,9 @@
         }
 
         .avatar-img {
-            width: 100%;
-            height: 100%;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
             object-fit: cover;
         }
 
@@ -87,25 +93,63 @@
             border: 2px solid var(--bg-color);
         }
 
+        .brand-text {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
         .brand-title {
             font-size: 1rem;
             font-weight: 700;
             letter-spacing: 0.5px;
             color: #ffffff;
-            display: flex;
-            align-items: center;
-            gap: 6px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .brand-subtitle {
             font-size: 0.72rem;
             color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .header-actions {
             display: flex;
             align-items: center;
             gap: 6px;
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 480px) {
+            header {
+                padding: 8px 10px;
+            }
+            .brand-title {
+                font-size: 0.9rem;
+            }
+            .brand-subtitle {
+                font-size: 0.68rem;
+            }
+            .avatar-container {
+                width: 42px;
+                height: 42px;
+            }
+            .avatar-img {
+                width: 42px;
+                height: 42px;
+            }
+            .lang-select-header {
+                padding: 4px 6px;
+                font-size: 0.75rem;
+            }
+            .icon-btn {
+                width: 34px;
+                height: 34px;
+            }
         }
 
         .lang-select-header {
@@ -225,6 +269,29 @@
         .message-row.system {
             align-self: center;
             max-width: 90%;
+        }
+
+        .chat-message-wrapper {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .chat-avatar-img {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+            border: 2px solid var(--accent-color);
+            box-shadow: 0 0 8px rgba(129, 140, 248, 0.3);
+        }
+
+        .chat-message-content {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-width: 0;
         }
 
         .message-bubble {
@@ -504,10 +571,10 @@
     <header>
         <div class="brand-container">
             <div class="avatar-container">
-                <img src="icon.png" alt="Esmeralda Avatar" class="avatar-img" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'%23818cf8\'><circle cx=\'12\' cy=\'8\' r=\'4\'/><path d=\'M12 14c-6.1 0-8 4-8 4v2h16v-2s-1.9-4-8-4z\'/></svg>'">
+                <img src="avatar-esmeralda.png" alt="Esmeralda Avatar" class="avatar-img" onerror="this.src='icon.png'">
                 <span class="status-badge"></span>
             </div>
-            <div>
+            <div class="brand-text">
                 <div class="brand-title">Esmeralda Secrets</div>
                 <div class="brand-subtitle">Asistent AI Virtual Club</div>
             </div>
@@ -838,8 +905,29 @@
                 footerDiv.appendChild(readBtn);
             }
 
-            rowDiv.appendChild(bubbleDiv);
-            rowDiv.appendChild(footerDiv);
+            if (role === "assistant") {
+                const wrapperDiv = document.createElement("div");
+                wrapperDiv.className = "chat-message-wrapper";
+
+                const avatarImg = document.createElement("img");
+                avatarImg.src = "avatar-esmeralda.png";
+                avatarImg.alt = "Esmeralda Avatar";
+                avatarImg.className = "chat-avatar-img";
+                avatarImg.onerror = function() { this.src = "icon.png"; };
+
+                const contentDiv = document.createElement("div");
+                contentDiv.className = "chat-message-content";
+                contentDiv.appendChild(bubbleDiv);
+                contentDiv.appendChild(footerDiv);
+
+                wrapperDiv.appendChild(avatarImg);
+                wrapperDiv.appendChild(contentDiv);
+
+                rowDiv.appendChild(wrapperDiv);
+            } else {
+                rowDiv.appendChild(bubbleDiv);
+                rowDiv.appendChild(footerDiv);
+            }
 
             if (isLive) {
                 const liveId = "live-msg-" + Date.now();
