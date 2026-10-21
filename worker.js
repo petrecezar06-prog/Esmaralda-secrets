@@ -5,10 +5,12 @@
  */
 function getCorsHeaders(request) {
   const origin = (request && request.headers && typeof request.headers.get === "function" && request.headers.get("Origin")) || "*";
+  const reqHeaders = (request && request.headers && typeof request.headers.get === "function" && request.headers.get("Access-Control-Request-Headers")) || "Content-Type, Authorization, X-Requested-With, Accept";
+
   return {
     "Access-Control-Allow-Origin": origin === "null" || !origin ? "*" : origin,
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, Accept",
+    "Access-Control-Allow-Headers": reqHeaders || "Content-Type, Authorization, X-Requested-With, Accept",
     "Access-Control-Max-Age": "86400",
   };
 }
@@ -27,10 +29,11 @@ const SYSTEM_PROMPT = "Ești Esmeralda, o asistentă AI de elită, elegantă, ca
 
 export default {
   async fetch(request, env = {}, ctx = {}) {
-    // Handle OPTIONS preflight requests globally with 204 No Content
+    // Handle OPTIONS preflight requests globally with 204 No Content and complete CORS headers
     if (request.method === "OPTIONS") {
       return new Response(null, {
         status: 204,
+        statusText: "No Content",
         headers: getCorsHeaders(request),
       });
     }
