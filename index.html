@@ -1169,7 +1169,16 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error(`Eroare HTTP (${response.status})`);
+                    let errorDetail = `HTTP ${response.status}`;
+                    try {
+                        const errJson = await response.json();
+                        if (errJson && (errJson.error || errJson.reply)) {
+                            errorDetail = errJson.error || errJson.reply;
+                        }
+                    } catch (e) {
+                        if (response.statusText) errorDetail += ` ${response.statusText}`;
+                    }
+                    throw new Error(errorDetail);
                 }
 
                 // Check if response is stream or JSON fallback
@@ -1226,6 +1235,13 @@
             } catch (error) {
                 console.error("Error communicating with worker:", error);
                 if (liveRowElem) liveRowElem.remove();
+
+                // Clean up unresponded user message from history array for clean retry
+                if (chatHistory.length > 0 && chatHistory[chatHistory.length - 1].role === "user" && chatHistory[chatHistory.length - 1].content === text) {
+                    chatHistory.pop();
+                    saveHistory();
+                }
+                userInput.value = text; // Restore input text so the user can easily retry
 
                 const errorText = `Eroare conexiune: Nu s-a putut comunica cu serverul (${targetEndpoint}). Details: ${error.message}`;
                 appendMessageUI("system", errorText, Date.now(), false);
