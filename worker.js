@@ -1,25 +1,17 @@
 // Esmeralda Secrets - Cloudflare Worker Backend
 
-/**
- * Generates dynamic CORS headers based on incoming request origin and requested headers.
- */
-function getCorsHeaders(request) {
-  const origin = (request && request.headers && typeof request.headers.get === "function" && request.headers.get("Origin")) || "*";
-  const reqHeaders = (request && request.headers && typeof request.headers.get === "function" && request.headers.get("Access-Control-Request-Headers")) || "Content-Type, Authorization, X-Requested-With, Accept";
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, Accept",
+  "Access-Control-Max-Age": "86400",
+};
 
-  return {
-    "Access-Control-Allow-Origin": origin === "null" || !origin ? "*" : origin,
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": reqHeaders || "Content-Type, Authorization, X-Requested-With, Accept",
-    "Access-Control-Max-Age": "86400",
-  };
-}
-
-function createJsonResponse(data, status = 200, request = null) {
+function createJsonResponse(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
     headers: {
-      ...getCorsHeaders(request),
+      ...corsHeaders,
       "Content-Type": "application/json; charset=utf-8",
     },
   });
@@ -29,16 +21,15 @@ const SYSTEM_PROMPT = "Ești Esmeralda, o asistentă AI de elită, elegantă, ca
 
 export default {
   async fetch(request, env = {}, ctx = {}) {
-    // Handle OPTIONS preflight requests globally with 204 No Content and complete CORS headers
-    if (request.method === "OPTIONS") {
-      return new Response(null, {
-        status: 204,
-        statusText: "No Content",
-        headers: getCorsHeaders(request),
-      });
-    }
-
     try {
+      // Handle OPTIONS preflight requests immediately with 204 No Content and CORS headers
+      if (request && request.method === "OPTIONS") {
+        return new Response(null, {
+          status: 204,
+          statusText: "No Content",
+          headers: corsHeaders,
+        });
+      }
       let userMessage = "";
       let conversationMessages = null;
       let isStreaming = false;
@@ -82,7 +73,7 @@ export default {
           return new Response(sseData, {
             status: 200,
             headers: {
-              ...getCorsHeaders(request),
+              ...corsHeaders,
               "Content-Type": "text/event-stream; charset=utf-8",
               "Cache-Control": "no-cache",
             }
@@ -92,7 +83,7 @@ export default {
           status: "success",
           response: welcomeText,
           reply: welcomeText,
-        }, 200, request);
+        }, 200);
       }
 
       // Reference OPENROUTER_API_KEY correctly from env
@@ -122,7 +113,7 @@ export default {
               return new Response(openRouterRes.body, {
                 status: 200,
                 headers: {
-                  ...getCorsHeaders(request),
+                  ...corsHeaders,
                   "Content-Type": "text/event-stream; charset=utf-8",
                   "Cache-Control": "no-cache",
                   "Connection": "keep-alive"
@@ -138,7 +129,7 @@ export default {
               reply: reply,
               model: model,
               choices: aiData.choices
-            }, 200, request);
+            }, 200);
           } else {
             const errText = await openRouterRes.text().catch(() => "");
             console.error("OpenRouter error:", errText);
@@ -146,7 +137,7 @@ export default {
               status: "error",
               error: `OpenRouter API Error (${openRouterRes.status}): ${errText || openRouterRes.statusText}`,
               reply: `Eroare OpenRouter API (${openRouterRes.status}). Te rugăm să încerci din nou.`
-            }, 500, request);
+            }, 500);
           }
         } catch (openRouterErr) {
           console.error("OpenRouter fetch exception:", openRouterErr);
@@ -154,7 +145,7 @@ export default {
             status: "error",
             error: openRouterErr.message || "A apărut o eroare la comunicarea cu OpenRouter.",
             reply: `Eroare OpenRouter: ${openRouterErr.message || "Eroare rețea/serviciu"}`
-          }, 500, request);
+          }, 500);
         }
       }
 
@@ -167,7 +158,7 @@ export default {
         return new Response(sseData, {
           status: 200,
           headers: {
-            ...getCorsHeaders(request),
+            ...corsHeaders,
             "Content-Type": "text/event-stream; charset=utf-8",
             "Cache-Control": "no-cache",
           }
@@ -179,7 +170,7 @@ export default {
         response: fallbackReply,
         reply: fallbackReply,
         error: "OPENROUTER_API_KEY is not set."
-      }, 200, request);
+      }, 200);
 
     } catch (err) {
       console.error("Worker fetch error:", err);
@@ -189,8 +180,7 @@ export default {
           error: err.message || "A apărut o eroare la procesarea cererii.",
           reply: `Eroare server: ${err.message || "Eroare necunoscută"}`
         },
-        500,
-        request
+        500
       );
     }
   }

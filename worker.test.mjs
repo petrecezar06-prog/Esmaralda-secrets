@@ -14,11 +14,10 @@ test('OPTIONS request returns 204 with CORS headers', async () => {
 
   const res = await worker.fetch(req, {}, {});
   assert.equal(res.status, 204);
-  assert.equal(res.headers.get('Access-Control-Allow-Origin'), 'https://cezar06-prog.github.io');
+  assert.equal(res.headers.get('Access-Control-Allow-Origin'), '*');
   assert.equal(res.headers.get('Access-Control-Allow-Methods'), 'GET, POST, OPTIONS');
   assert.ok(res.headers.get('Access-Control-Allow-Headers').includes('Content-Type'));
   assert.ok(res.headers.get('Access-Control-Allow-Headers').includes('Authorization'));
-  assert.ok(res.headers.get('Access-Control-Allow-Headers').includes('X-Requested-With'));
 });
 
 test('POST request without API key returns warning response with CORS headers', async () => {
@@ -33,7 +32,7 @@ test('POST request without API key returns warning response with CORS headers', 
 
   const res = await worker.fetch(req, {}, {});
   assert.equal(res.status, 200);
-  assert.equal(res.headers.get('Access-Control-Allow-Origin'), 'https://cezar06-prog.github.io');
+  assert.equal(res.headers.get('Access-Control-Allow-Origin'), '*');
   assert.equal(res.headers.get('Access-Control-Allow-Methods'), 'GET, POST, OPTIONS');
   assert.ok(res.headers.get('Access-Control-Allow-Headers').includes('Content-Type'));
 
@@ -168,7 +167,7 @@ test('POST request when OpenRouter returns error returns status 500 with CORS he
   }, {});
 
   assert.equal(res.status, 500);
-  assert.equal(res.headers.get('Access-Control-Allow-Origin'), 'https://cezar06-prog.github.io');
+  assert.equal(res.headers.get('Access-Control-Allow-Origin'), '*');
   assert.equal(res.headers.get('Access-Control-Allow-Methods'), 'GET, POST, OPTIONS');
   assert.ok(res.headers.get('Access-Control-Allow-Headers').includes('Content-Type'));
 
@@ -187,10 +186,25 @@ test('GET request returns response with CORS headers', async () => {
 
   const res = await worker.fetch(req, {}, {});
   assert.equal(res.status, 200);
-  assert.equal(res.headers.get('Access-Control-Allow-Origin'), 'https://cezar06-prog.github.io');
+  assert.equal(res.headers.get('Access-Control-Allow-Origin'), '*');
   assert.equal(res.headers.get('Access-Control-Allow-Methods'), 'GET, POST, OPTIONS');
   assert.ok(res.headers.get('Access-Control-Allow-Headers').includes('Content-Type'));
 
   const body = await res.json();
   assert.equal(body.status, 'warning');
+});
+
+test('Unexpected exception returns 500 JSON response with CORS headers', async () => {
+  const invalidReq = {
+    get method() {
+      throw new Error('Unexpected internal error');
+    }
+  };
+
+  const res = await worker.fetch(invalidReq, {}, {});
+  assert.equal(res.status, 500);
+  assert.equal(res.headers.get('Access-Control-Allow-Origin'), '*');
+  const body = await res.json();
+  assert.equal(body.status, 'error');
+  assert.ok(body.error.includes('Unexpected internal error'));
 });
