@@ -750,8 +750,24 @@
             }
         }
 
+        // Helper to normalize and ensure correct Worker endpoint URL
+        function getNormalizedWorkerUrl(inputUrl) {
+            let url = (inputUrl || settings.workerUrl || DEFAULT_WORKER_URL).trim();
+            if (!url) url = DEFAULT_WORKER_URL;
+            if (!url.startsWith("http://") && !url.startsWith("https://")) {
+                url = "https://" + url;
+            }
+            if (url.startsWith("http://") && !url.includes("localhost") && !url.includes("127.0.0.1")) {
+                url = "https://" + url.slice(7);
+            }
+            return url;
+        }
+
         // --- SETTINGS MANAGEMENT ---
         function loadSettings() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const queryWorker = urlParams.get("worker_url") || urlParams.get("api") || urlParams.get("worker") || urlParams.get("endpoint");
+
             const saved = localStorage.getItem(STORAGE_KEY_SETTINGS);
             if (saved) {
                 try {
@@ -761,9 +777,15 @@
                     console.error("Failed to parse settings:", e);
                 }
             }
-            if (!settings.workerUrl || settings.workerUrl.trim() === "") {
+
+            if (queryWorker && queryWorker.trim()) {
+                settings.workerUrl = getNormalizedWorkerUrl(queryWorker);
+            } else if (!settings.workerUrl || settings.workerUrl.trim() === "") {
                 settings.workerUrl = DEFAULT_WORKER_URL;
+            } else {
+                settings.workerUrl = getNormalizedWorkerUrl(settings.workerUrl);
             }
+
             if (!settings.language) {
                 settings.language = "ro-RO";
             }
@@ -773,7 +795,8 @@
         }
 
         function saveSettings() {
-            settings.workerUrl = settingWorkerUrl.value.trim() || DEFAULT_WORKER_URL;
+            const rawUrl = settingWorkerUrl.value.trim();
+            settings.workerUrl = getNormalizedWorkerUrl(rawUrl || DEFAULT_WORKER_URL);
             settings.userName = settingUserName.value.trim();
             settings.language = settingLanguage.value || "ro-RO";
             if (headerLangSelect) headerLangSelect.value = settings.language;
@@ -1130,14 +1153,6 @@
             window.speechSynthesis.speak(utterance);
         }
 
-        // Helper to normalize and ensure correct Worker endpoint URL
-        function getNormalizedWorkerUrl() {
-            let url = (settings.workerUrl || DEFAULT_WORKER_URL).trim();
-            if (!url.startsWith("http://") && !url.startsWith("https://")) {
-                url = "https://" + url;
-            }
-            return url || DEFAULT_WORKER_URL;
-        }
 
         // --- MAIN SEND / STREAMING LOGIC ---
         async function handleUserSend() {
@@ -1165,6 +1180,9 @@
             // Build request messages history
             const apiMessages = chatHistory.map(m => ({ role: m.role, content: m.content }));
 
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 30000);
+
             try {
                 const response = await fetch(targetEndpoint, {
                     method: "POST",
@@ -1174,8 +1192,10 @@
                     body: JSON.stringify({
                         stream: true,
                         messages: apiMessages
-                    })
+                    }),
+                    signal: controller.signal
                 });
+                clearTimeout(timeoutId);
 
                 if (!response.ok) {
                     let errorDetail = `HTTP ${response.status}`;
@@ -1242,6 +1262,7 @@
                 addMessage("assistant", accumulatedText, true);
 
             } catch (error) {
+                clearTimeout(timeoutId);
                 console.error("Error communicating with worker:", error);
                 if (liveRowElem) liveRowElem.remove();
 
@@ -1252,9 +1273,15 @@
                 }
                 userInput.value = text; // Restore input text so the user can easily retry
 
+                const isAbortError = error.name === "AbortError";
                 const isFetchError = error.name === "TypeError" || error.message.includes("Failed to fetch") || error.message.includes("NetworkError");
                 let userFriendlyError = "";
-                if (isFetchError) {
+
+                if (isAbortError) {
+                    userFriendlyError = settings.language === "en-US"
+                        ? `Connection timeout (${targetEndpoint}): The request took too long to respond. Please try again.`
+                        : `Timp de așteptare expirat (${targetEndpoint}): Serverul nu a răspuns în timp util. Vă rugăm să încercați din nou.`;
+                } else if (isFetchError) {
                     userFriendlyError = settings.language === "en-US"
                         ? `Connection error: Unable to reach Cloudflare Worker proxy (${targetEndpoint}). Please check your connection or CORS settings.`
                         : `Eroare conexiune: Nu s-a putut comunica cu serverul Cloudflare Worker (${targetEndpoint}). Verificați dacă proxy-ul este activ și conexiunea la internet este stabilă.`;
