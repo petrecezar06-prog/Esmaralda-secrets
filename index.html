@@ -761,6 +761,18 @@
                     console.error("Failed to parse settings:", e);
                 }
             }
+
+            // Check URL query parameters for override (e.g. ?worker_url=... or ?api=...)
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const paramUrl = urlParams.get("worker_url") || urlParams.get("api") || urlParams.get("worker") || urlParams.get("endpoint");
+                if (paramUrl && paramUrl.trim() !== "") {
+                    settings.workerUrl = paramUrl.trim();
+                }
+            } catch (e) {
+                // Ignore URL search params parsing error
+            }
+
             if (!settings.workerUrl || settings.workerUrl.trim() === "") {
                 settings.workerUrl = DEFAULT_WORKER_URL;
             }
@@ -1135,6 +1147,10 @@
             let url = (settings.workerUrl || DEFAULT_WORKER_URL).trim();
             if (!url.startsWith("http://") && !url.startsWith("https://")) {
                 url = "https://" + url;
+            }
+            // Ensure http is upgraded to https for secure worker endpoints
+            if (url.startsWith("http://")) {
+                url = url.replace("http://", "https://");
             }
             return url || DEFAULT_WORKER_URL;
         }

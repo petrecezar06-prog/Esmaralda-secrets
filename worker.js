@@ -22,11 +22,10 @@ const SYSTEM_PROMPT = "Ești Esmeralda, o asistentă AI de elită, elegantă, ca
 export default {
   async fetch(request, env = {}, ctx = {}) {
     try {
-      // Handle OPTIONS preflight requests immediately with 204 No Content and CORS headers
+      // Explicitly handle OPTIONS preflight requests at the very top of fetch handler
       if (request && request.method === "OPTIONS") {
         return new Response(null, {
           status: 204,
-          statusText: "No Content",
           headers: corsHeaders,
         });
       }
