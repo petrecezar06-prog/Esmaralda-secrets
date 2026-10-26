@@ -762,6 +762,11 @@
                 }
             }
 
+            const legacyWorkerUrl = localStorage.getItem("worker_url");
+            if (legacyWorkerUrl && legacyWorkerUrl.trim() !== "") {
+                settings.workerUrl = legacyWorkerUrl.trim();
+            }
+
             // Check URL query parameters for override (e.g. ?worker_url=... or ?api=...)
             try {
                 const urlParams = new URLSearchParams(window.location.search);
@@ -773,9 +778,7 @@
                 // Ignore URL search params parsing error
             }
 
-            if (!settings.workerUrl || settings.workerUrl.trim() === "") {
-                settings.workerUrl = DEFAULT_WORKER_URL;
-            }
+            settings.workerUrl = getNormalizedWorkerUrl();
             if (!settings.language) {
                 settings.language = "ro-RO";
             }
@@ -1144,7 +1147,7 @@
 
         // Helper to normalize and ensure correct Worker endpoint URL
         function getNormalizedWorkerUrl() {
-            let url = (settings.workerUrl || DEFAULT_WORKER_URL).trim();
+            let url = (settings.workerUrl || localStorage.getItem("worker_url") || DEFAULT_WORKER_URL).trim();
             if (!url.startsWith("http://") && !url.startsWith("https://")) {
                 url = "https://" + url;
             }
@@ -1152,6 +1155,20 @@
             if (url.startsWith("http://")) {
                 url = url.replace("http://", "https://");
             }
+
+            // Filter out static hosting domains (*.github.io, *.pages.dev, *.netlify.app, *.vercel.app)
+            try {
+                const parsedUrl = new URL(url);
+                const host = parsedUrl.hostname.toLowerCase();
+                if (host.endsWith("github.io") || host.endsWith("pages.dev") || host.endsWith("netlify.app") || host.endsWith("vercel.app") || host === "localhost" || host === "127.0.0.1") {
+                    if (!host.endsWith(".workers.dev")) {
+                        return DEFAULT_WORKER_URL;
+                    }
+                }
+            } catch (e) {
+                return DEFAULT_WORKER_URL;
+            }
+
             return url || DEFAULT_WORKER_URL;
         }
 
@@ -1181,6 +1198,9 @@
             // Build request messages history
             const apiMessages = chatHistory.map(m => ({ role: m.role, content: m.content }));
 
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 30000);
+
             try {
                 const response = await fetch(targetEndpoint, {
                     method: "POST",
@@ -1190,8 +1210,10 @@
                     body: JSON.stringify({
                         stream: true,
                         messages: apiMessages
-                    })
+                    }),
+                    signal: controller.signal
                 });
+                clearTimeout(timeoutId);
 
                 if (!response.ok) {
                     let errorDetail = `HTTP ${response.status}`;
@@ -1258,6 +1280,7 @@
                 addMessage("assistant", accumulatedText, true);
 
             } catch (error) {
+                clearTimeout(timeoutId);
                 console.error("Error communicating with worker:", error);
                 if (liveRowElem) liveRowElem.remove();
 
@@ -1268,9 +1291,14 @@
                 }
                 userInput.value = text; // Restore input text so the user can easily retry
 
-                const isFetchError = error.name === "TypeError" || error.message.includes("Failed to fetch") || error.message.includes("NetworkError");
+                const isTimeout = error.name === "AbortError";
+                const isFetchError = isTimeout || error.name === "TypeError" || error.message.includes("Failed to fetch") || error.message.includes("NetworkError");
                 let userFriendlyError = "";
-                if (isFetchError) {
+                if (isTimeout) {
+                    userFriendlyError = settings.language === "en-US"
+                        ? `Connection timeout: Server took too long to respond (${targetEndpoint}).`
+                        : `Eroare conexiune: Conexiunea la serverul Cloudflare Worker (${targetEndpoint}) a expirat. Verificați conexiunea.`;
+                } else if (isFetchError) {
                     userFriendlyError = settings.language === "en-US"
                         ? `Connection error: Unable to reach Cloudflare Worker proxy (${targetEndpoint}). Please check your connection or CORS settings.`
                         : `Eroare conexiune: Nu s-a putut comunica cu serverul Cloudflare Worker (${targetEndpoint}). Verificați dacă proxy-ul este activ și conexiunea la internet este stabilă.`;

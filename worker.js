@@ -97,7 +97,7 @@ export default {
             headers: {
               "Authorization": `Bearer ${apiKey}`,
               "Content-Type": "application/json",
-              "HTTP-Referer": "https://cezar06-prog.github.io",
+              "HTTP-Referer": "https://petrecezar06-prog.github.io",
               "X-Title": "Esmeralda Secrets",
             },
             body: JSON.stringify({
