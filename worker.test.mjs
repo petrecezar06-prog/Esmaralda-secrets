@@ -20,6 +20,24 @@ test('OPTIONS request returns 204 with CORS headers', async () => {
   assert.ok(res.headers.get('Access-Control-Allow-Headers').includes('Authorization'));
 });
 
+test('POST request with invalid JSON body handles payload safely without throwing', async () => {
+  const req = new Request('https://nameless-block-036e.workers.dev/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Origin': 'https://petrecezar06-prog.github.io',
+    },
+    body: 'invalid-json-{',
+  });
+
+  const res = await worker.fetch(req, {}, {});
+  assert.equal(res.status, 200);
+  assert.equal(res.headers.get('Access-Control-Allow-Origin'), '*');
+  const body = await res.json();
+  assert.equal(body.status, 'success');
+  assert.ok(body.reply.includes('Esmeralda'));
+});
+
 test('POST request without API key returns warning response with CORS headers', async () => {
   const req = new Request('https://nameless-block-036e.workers.dev/', {
     method: 'POST',
