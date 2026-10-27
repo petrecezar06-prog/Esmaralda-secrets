@@ -6,7 +6,7 @@ test('OPTIONS request returns 204 with CORS headers', async () => {
   const req = new Request('https://nameless-block-036e.workers.dev/', {
     method: 'OPTIONS',
     headers: {
-      'Origin': 'https://cezar06-prog.github.io',
+      'Origin': 'https://petrecezar06-prog.github.io',
       'Access-Control-Request-Method': 'POST',
       'Access-Control-Request-Headers': 'Content-Type, Authorization, X-Requested-With',
     },
@@ -43,7 +43,7 @@ test('POST request without API key returns warning response with CORS headers', 
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Origin': 'https://cezar06-prog.github.io',
+      'Origin': 'https://petrecezar06-prog.github.io',
     },
     body: JSON.stringify({ message: 'Hello' }),
   });
@@ -77,7 +77,7 @@ test('POST request with API key calls OpenRouter with system prompt and returns 
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Origin': 'https://cezar06-prog.github.io',
+      'Origin': 'https://petrecezar06-prog.github.io',
     },
     body: JSON.stringify({ message: 'Ce poți face?' }),
   });
@@ -113,7 +113,7 @@ test('POST request with conversation history passes messages array correctly', a
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Origin': 'https://cezar06-prog.github.io',
+      'Origin': 'https://petrecezar06-prog.github.io',
     },
     body: JSON.stringify({
       messages: [
@@ -149,7 +149,7 @@ test('POST request with stream: true returns SSE event-stream', async () => {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Origin': 'https://cezar06-prog.github.io',
+      'Origin': 'https://petrecezar06-prog.github.io',
     },
     body: JSON.stringify({ message: 'Buzzer', stream: true }),
   });
@@ -174,7 +174,7 @@ test('POST request when OpenRouter returns error returns status 500 with CORS he
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Origin': 'https://cezar06-prog.github.io',
+      'Origin': 'https://petrecezar06-prog.github.io',
     },
     body: JSON.stringify({ message: 'Test error' }),
   });
@@ -198,7 +198,7 @@ test('GET request returns response with CORS headers', async () => {
   const req = new Request('https://nameless-block-036e.workers.dev/?msg=Test', {
     method: 'GET',
     headers: {
-      'Origin': 'https://cezar06-prog.github.io',
+      'Origin': 'https://petrecezar06-prog.github.io',
     },
   });
 
