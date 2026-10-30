@@ -1151,19 +1151,22 @@
             if (!url.startsWith("http://") && !url.startsWith("https://")) {
                 url = "https://" + url;
             }
-            // Ensure http is upgraded to https for secure worker endpoints
-            if (url.startsWith("http://")) {
+            // Ensure http is upgraded to https for secure worker endpoints (except local dev servers)
+            if (url.startsWith("http://") && !url.includes("localhost") && !url.includes("127.0.0.1")) {
                 url = url.replace("http://", "https://");
             }
+
+            // Remove trailing slashes for clean endpoint formatting
+            url = url.replace(/\/+$/, "");
 
             // Filter out static hosting domains (*.github.io, *.pages.dev, *.netlify.app, *.vercel.app)
             try {
                 const parsedUrl = new URL(url);
                 const host = parsedUrl.hostname.toLowerCase();
-                if (host.endsWith("github.io") || host.endsWith("pages.dev") || host.endsWith("netlify.app") || host.endsWith("vercel.app") || host === "localhost" || host === "127.0.0.1") {
-                    if (!host.endsWith(".workers.dev")) {
-                        return DEFAULT_WORKER_URL;
-                    }
+                const isStaticHost = host.endsWith("github.io") || host.endsWith("pages.dev") || host.endsWith("netlify.app") || host.endsWith("vercel.app");
+                const isSameAsFrontendHost = typeof window !== 'undefined' && window.location && window.location.host && parsedUrl.host === window.location.host;
+                if ((isStaticHost || isSameAsFrontendHost) && !host.endsWith(".workers.dev")) {
+                    return DEFAULT_WORKER_URL;
                 }
             } catch (e) {
                 return DEFAULT_WORKER_URL;
