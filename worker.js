@@ -22,50 +22,67 @@ const SYSTEM_PROMPT = "Ești Esmeralda, o asistentă AI de elită, elegantă, ca
 export default {
   async fetch(request, env = {}, ctx = {}) {
     try {
-      // Explicitly handle OPTIONS preflight requests at the very top of fetch handler
+      // 1. Handle CORS preflight (OPTIONS) requests immediately
       if (request && request.method === "OPTIONS") {
         return new Response(null, {
           status: 204,
           headers: corsHeaders,
         });
       }
+
+      // Check method support
+      if (request && request.method !== "POST" && request.method !== "GET") {
+        return createJsonResponse({
+          status: "error",
+          error: `Method ${request.method} Not Allowed`,
+          reply: `Metoda HTTP ${request.method} nu este suportată. Folosiți GET sau POST.`
+        }, 405);
+      }
+
       let userMessage = "";
       let conversationMessages = null;
       let isStreaming = false;
       let requestedModel = null;
 
-      // Safely parse request payload for POST requests or URL params for GET
-      if (request.method === "POST") {
+      // 2. Safely parse request payload for POST requests or URL params for GET
+      if (request && request.method === "POST") {
         try {
           const body = await request.json();
-          userMessage = body.message || body.msg || body.prompt || "";
-          isStreaming = Boolean(body.stream);
-          requestedModel = body.model || null;
-          if (Array.isArray(body.messages) && body.messages.length > 0) {
-            conversationMessages = body.messages;
+          if (body && typeof body === "object") {
+            userMessage = body.message || body.msg || body.prompt || "";
+            isStreaming = Boolean(body.stream);
+            requestedModel = body.model || null;
+            if (Array.isArray(body.messages) && body.messages.length > 0) {
+              conversationMessages = body.messages;
+            }
           }
-        } catch (e) {
+        } catch (parseErr) {
           userMessage = "";
         }
-      } else if (request.method === "GET") {
-        const url = new URL(request.url);
-        userMessage = url.searchParams.get("msg") || url.searchParams.get("message") || url.searchParams.get("prompt") || "";
-        isStreaming = url.searchParams.get("stream") === "true";
+      } else if (request && request.method === "GET") {
+        try {
+          const url = new URL(request.url);
+          userMessage = url.searchParams.get("msg") || url.searchParams.get("message") || url.searchParams.get("prompt") || "";
+          isStreaming = url.searchParams.get("stream") === "true";
+        } catch (urlErr) {
+          userMessage = "";
+        }
       }
 
-      // Build payload messages array with system prompt
+      // 3. Build payload messages array with system prompt
       let apiMessages = [];
       if (conversationMessages && conversationMessages.length > 0) {
-        const nonSystemMsgs = conversationMessages.filter(m => m && m.role !== "system");
+        const nonSystemMsgs = conversationMessages.filter(m => m && typeof m === "object" && m.role !== "system");
         apiMessages = [{ role: "system", content: SYSTEM_PROMPT }, ...nonSystemMsgs];
-      } else if (userMessage && userMessage.trim() !== "") {
+      } else if (userMessage && typeof userMessage === "string" && userMessage.trim() !== "") {
         apiMessages = [
           { role: "system", content: SYSTEM_PROMPT },
-          { role: "user", content: userMessage }
+          { role: "user", content: userMessage.trim() }
         ];
       }
 
-      if (apiMessages.length <= 1 && (!userMessage || userMessage.trim() === "")) {
+      // Default greeting if no message provided
+      if (apiMessages.length <= 1 && (!userMessage || typeof userMessage !== "string" || userMessage.trim() === "")) {
         const welcomeText = "Sunt Esmeralda. Cu ce te pot ajuta astăzi?";
         if (isStreaming) {
           const sseData = `data: ${JSON.stringify({ choices: [{ delta: { content: welcomeText } }] })}\n\ndata: [DONE]\n\n`;
@@ -85,12 +102,16 @@ export default {
         }, 200);
       }
 
-      // Reference OPENROUTER_API_KEY correctly from env
+      // 4. Reference OPENROUTER_API_KEY and model from env
       const apiKey = env ? env.OPENROUTER_API_KEY : null;
       const model = requestedModel || ((env && env.OPENROUTER_MODEL) ? env.OPENROUTER_MODEL : "openrouter/auto");
 
       if (apiKey) {
-        const fetchImpl = (env && env.fetch) ? env.fetch : fetch;
+        const fetchImpl = (env && typeof env.fetch === "function") ? env.fetch : fetch;
+        const controller = new AbortController();
+        const timeoutMs = 25000;
+        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
         try {
           const openRouterRes = await fetchImpl("https://openrouter.ai/api/v1/chat/completions", {
             method: "POST",
@@ -104,8 +125,10 @@ export default {
               model: model,
               messages: apiMessages,
               stream: isStreaming,
-            })
+            }),
+            signal: controller.signal,
           });
+          clearTimeout(timeoutId);
 
           if (openRouterRes.ok) {
             if (isStreaming) {
@@ -139,16 +162,22 @@ export default {
             }, 500);
           }
         } catch (openRouterErr) {
+          clearTimeout(timeoutId);
           console.error("OpenRouter fetch exception:", openRouterErr);
+          const isTimeout = openRouterErr.name === "AbortError";
+          const statusCode = isTimeout ? 504 : 500;
+          const errMsg = isTimeout
+            ? "Conexiunea către OpenRouter API a expirat (timeout)."
+            : (openRouterErr.message || "A apărut o eroare la comunicarea cu OpenRouter.");
           return createJsonResponse({
             status: "error",
-            error: openRouterErr.message || "A apărut o eroare la comunicarea cu OpenRouter.",
-            reply: `Eroare OpenRouter: ${openRouterErr.message || "Eroare rețea/serviciu"}`
-          }, 500);
+            error: errMsg,
+            reply: `Eroare serviciu AI: ${errMsg}`
+          }, statusCode);
         }
       }
 
-      // If OPENROUTER_API_KEY is not configured, inform the client
+      // If OPENROUTER_API_KEY is not configured, inform the client safely
       const lastMsg = apiMessages[apiMessages.length - 1]?.content || userMessage;
       const fallbackReply = `[Esmeralda]: Am primit mesajul tău: "${lastMsg}". Cheia OPENROUTER_API_KEY nu este configurată în Cloudflare Worker secrets.`;
 

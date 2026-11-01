@@ -194,6 +194,34 @@ test('POST request when OpenRouter returns error returns status 500 with CORS he
   assert.ok(body.error.includes('OpenRouter API Error (401)'));
 });
 
+test('POST request when OpenRouter times out returns 504 with CORS headers', async () => {
+  const mockFetch = async (url, options) => {
+    const error = new Error('The operation was aborted');
+    error.name = 'AbortError';
+    throw error;
+  };
+
+  const req = new Request('https://nameless-block-036e.workers.dev/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Origin': 'https://cezar06-prog.github.io',
+    },
+    body: JSON.stringify({ message: 'Test timeout' }),
+  });
+
+  const res = await worker.fetch(req, {
+    OPENROUTER_API_KEY: 'test-key',
+    fetch: mockFetch
+  }, {});
+
+  assert.equal(res.status, 504);
+  assert.equal(res.headers.get('Access-Control-Allow-Origin'), '*');
+  const body = await res.json();
+  assert.equal(body.status, 'error');
+  assert.ok(body.error.includes('timeout'));
+});
+
 test('GET request returns response with CORS headers', async () => {
   const req = new Request('https://nameless-block-036e.workers.dev/?msg=Test', {
     method: 'GET',
@@ -210,6 +238,22 @@ test('GET request returns response with CORS headers', async () => {
 
   const body = await res.json();
   assert.equal(body.status, 'warning');
+});
+
+test('Unsupported HTTP method returns 405 with CORS headers', async () => {
+  const req = new Request('https://nameless-block-036e.workers.dev/', {
+    method: 'DELETE',
+    headers: {
+      'Origin': 'https://cezar06-prog.github.io',
+    },
+  });
+
+  const res = await worker.fetch(req, {}, {});
+  assert.equal(res.status, 405);
+  assert.equal(res.headers.get('Access-Control-Allow-Origin'), '*');
+  const body = await res.json();
+  assert.equal(body.status, 'error');
+  assert.ok(body.error.includes('Not Allowed'));
 });
 
 test('Unexpected exception returns 500 JSON response with CORS headers', async () => {
